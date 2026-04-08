@@ -1,0 +1,108 @@
+<h2>详情页中英文展示方式</h2>
+<p class="subtitle">每个案例的独立详情页，中英文内容如何排布？</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f7;padding:12px;font-family:-apple-system,sans-serif;">
+      <div style="background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#ff6b6b,#ee5a24);padding:14px 16px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">📱</span>
+          <div>
+            <div style="color:#fff;font-size:12px;font-weight:700;">Daily Reddit Digest</div>
+            <div style="color:rgba(255,255,255,0.8);font-size:9px;">每日 Reddit 摘要</div>
+          </div>
+        </div>
+        <!-- Two column content -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;">
+          <div style="padding:12px;border-right:1px solid #f0f0f0;">
+            <div style="font-size:9px;font-weight:700;color:#1d1d1f;margin-bottom:6px;display:flex;align-items:center;gap:4px;">
+              <span style="background:#1d1d1f;color:#fff;padding:1px 5px;border-radius:3px;font-size:7px;">中文</span> 功��说明
+            </div>
+            <div style="font-size:8px;color:#3d3d3f;line-height:1.5;">每天自动从你关注的版块抓取热门帖子，整理成可读摘要，支持自定义时间和内容偏好...</div>
+          </div>
+          <div style="padding:12px;background:#fafafa;">
+            <div style="font-size:9px;font-weight:700;color:#86868b;margin-bottom:6px;">EN Original</div>
+            <div style="font-size:8px;color:#86868b;line-height:1.5;">Automatically fetches top posts from your chosen subreddits and compiles them into a daily digest...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · 左中右英双栏</h3>
+      <p>中文在左（主）、英文在右（辅）。同屏对照，方便双语读者；中文占主视觉权重</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f7;padding:12px;font-family:-apple-system,sans-serif;">
+      <div style="background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#ff6b6b,#ee5a24);padding:14px 16px;display:flex;align-items:center;gap:8px;">
+          <span style="font-size:20px;">📱</span>
+          <div>
+            <div style="color:#fff;font-size:12px;font-weight:700;">Daily Reddit Digest</div>
+            <div style="color:rgba(255,255,255,0.8);font-size:9px;">每日 Reddit 摘要</div>
+          </div>
+        </div>
+        <!-- Tab bar -->
+        <div style="display:flex;border-bottom:1px solid #f0f0f0;">
+          <div style="padding:8px 14px;font-size:9px;font-weight:600;color:#1d1d1f;border-bottom:2px solid #0071e3;">中文版本</div>
+          <div style="padding:8px 14px;font-size:9px;font-weight:500;color:#86868b;">English Version</div>
+          <div style="padding:8px 14px;font-size:9px;font-weight:500;color:#86868b;">GitHub ↗</div>
+        </div>
+        <!-- Content -->
+        <div style="padding:12px;">
+          <div style="font-size:9px;font-weight:600;color:#1d1d1f;margin-bottom:4px;">功能说明</div>
+          <div style="font-size:8px;color:#3d3d3f;line-height:1.5;margin-bottom:8px;">每天自动从你关注的版块抓取热门帖子，整理成可读摘要...</div>
+          <div style="font-size:9px;font-weight:600;color:#1d1d1f;margin-bottom:4px;">所需技能</div>
+          <div style="display:flex;gap:4px;flex-wrap:wrap;">
+            <span style="background:#f5f5f7;color:#3d3d3f;padding:2px 6px;border-radius:4px;font-size:7px;">reddit-readonly</span>
+            <span style="background:#f5f5f7;color:#3d3d3f;padding:2px 6px;border-radius:4px;font-size:7px;">memory</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · 标签页切换</h3>
+      <p>中文 / 英文 / GitHub 三个 Tab。中文为默认，按需切换原文。页面简洁，内容聚焦</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f7;padding:12px;font-family:-apple-system,sans-serif;">
+      <div style="background:#fff;border-radius:10px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+        <!-- Header -->
+        <div style="background:linear-gradient(135deg,#ff6b6b,#ee5a24);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:20px;">📱</span>
+            <div>
+              <div style="color:#fff;font-size:12px;font-weight:700;">Daily Reddit Digest</div>
+              <div style="color:rgba(255,255,255,0.8);font-size:9px;">每日 Reddit 摘要</div>
+            </div>
+          </div>
+          <a style="background:rgba(255,255,255,0.2);color:#fff;padding:3px 8px;border-radius:20px;font-size:8px;text-decoration:none;">GitHub ↗</a>
+        </div>
+        <!-- Main Chinese content -->
+        <div style="padding:12px;">
+          <div style="font-size:9px;font-weight:600;color:#1d1d1f;margin-bottom:4px;">功能说明</div>
+          <div style="font-size:8px;color:#3d3d3f;line-height:1.5;margin-bottom:8px;">每天自动从你关注的版块抓取热门帖子，整理成可读摘要...</div>
+          <!-- Collapsible English -->
+          <div style="border:1px solid #e5e5e7;border-radius:6px;overflow:hidden;">
+            <div style="padding:6px 10px;background:#f9f9f9;display:flex;justify-content:space-between;align-items:center;">
+              <span style="font-size:8px;color:#86868b;font-weight:500;">View English Original</span>
+              <span style="font-size:10px;color:#86868b;">▾</span>
+            </div>
+            <div style="padding:8px 10px;font-size:8px;color:#86868b;line-height:1.5;border-top:1px solid #f0f0f0;">Automatically fetches top posts from chosen subreddits and compiles them into a readable daily digest...</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · 中文为主 + 折叠英文</h3>
+      <p>全中文展示，底部可折叠显示英文原文。中文读者体验最佳，英文可选查看，页面最简洁</p>
+    </div>
+  </div>
+
+</div>

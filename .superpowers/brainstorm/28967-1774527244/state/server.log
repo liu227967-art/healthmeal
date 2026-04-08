@@ -1,0 +1,6 @@
+{"type":"server-started","port":61555,"host":"127.0.0.1","url_host":"localhost","url":"http://localhost:61555","screen_dir":"/Users/liuying/Desktop/lilyproject/.superpowers/brainstorm/28967-1774527244/content","state_dir":"/Users/liuying/Desktop/lilyproject/.superpowers/brainstorm/28967-1774527244/state"}
+{"type":"screen-added","file":"/Users/liuying/Desktop/lilyproject/.superpowers/brainstorm/28967-1774527244/content/layout.html"}
+{"type":"screen-added","file":"/Users/liuying/Desktop/lilyproject/.superpowers/brainstorm/28967-1774527244/content/card-style.html"}
+{"type":"screen-added","file":"/Users/liuying/Desktop/lilyproject/.superpowers/brainstorm/28967-1774527244/content/detail-layout.html"}
+{"type":"screen-added","file":"/Users/liuying/Desktop/lilyproject/.superpowers/brainstorm/28967-1774527244/content/waiting-1.html"}
+{"type":"server-stopped","reason":"idle timeout"}

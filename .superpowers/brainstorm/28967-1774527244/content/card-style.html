@@ -1,0 +1,87 @@
+<h2>案例卡片设计风格</h2>
+<p class="subtitle">在 4 列网格中，每张卡片长什么样？</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f7;padding:16px;font-family:-apple-system,sans-serif;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          <div style="font-size:9px;color:#86868b;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">社交媒体</div>
+          <div style="font-size:12px;font-weight:600;color:#1d1d1f;line-height:1.3;">Daily Reddit Digest</div>
+          <div style="font-size:10px;color:#86868b;margin-top:4px;line-height:1.4;">每日 Reddit 热帖摘要，自动整理你关注的版块</div>
+          <div style="margin-top:10px;font-size:9px;color:#0071e3;font-weight:500;">查看详情 →</div>
+        </div>
+        <div style="background:#fff;border-radius:12px;padding:16px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          <div style="font-size:9px;color:#86868b;font-weight:500;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">社交媒体</div>
+          <div style="font-size:12px;font-weight:600;color:#1d1d1f;line-height:1.3;">X Account Analysis</div>
+          <div style="font-size:10px;color:#86868b;margin-top:4px;line-height:1.4;">X 账号深度分析，洞察受众与内容表现</div>
+          <div style="margin-top:10px;font-size:9px;color:#0071e3;font-weight:500;">查看详情 →</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · 极简白卡</h3>
+      <p>纯白底 + 灰色类别标签 + 标题 + 简短描述。最接近苹果官网产品列表风格，干净、统一</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f7;padding:16px;font-family:-apple-system,sans-serif;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          <div style="background:linear-gradient(135deg,#ff6b6b,#ee5a24);padding:12px 12px 8px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:16px;">📱</span>
+            <span style="font-size:8px;color:rgba(255,255,255,0.9);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">社交媒体</span>
+          </div>
+          <div style="padding:10px 12px 12px;">
+            <div style="font-size:11px;font-weight:600;color:#1d1d1f;line-height:1.3;">Daily Reddit Digest</div>
+            <div style="font-size:9px;color:#86868b;margin-top:3px;line-height:1.4;">每日 Reddit 热帖摘要</div>
+          </div>
+        </div>
+        <div style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
+          <div style="background:linear-gradient(135deg,#4ecdc4,#44a08d);padding:12px 12px 8px;display:flex;align-items:center;gap:6px;">
+            <span style="font-size:16px;">🎨</span>
+            <span style="font-size:8px;color:rgba(255,255,255,0.9);font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">创意构建</span>
+          </div>
+          <div style="padding:10px 12px 12px;">
+            <div style="font-size:11px;font-weight:600;color:#1d1d1f;line-height:1.3;">Content Factory</div>
+            <div style="font-size:9px;color:#86868b;margin-top:3px;line-height:1.4;">多智能体内容工厂</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · 彩色类别头图</h3>
+      <p>每个类别有专属渐变色 + 表情图标头图区。视觉分类清晰，活泼有辨识度，类似 Notion 模板库</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#1d1d1f;padding:16px;font-family:-apple-system,sans-serif;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div style="background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:#ff6b6b;"></div>
+            <span style="font-size:8px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;">社交媒体</span>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#f5f5f7;line-height:1.3;">Daily Reddit Digest</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">每日 Reddit 热帖摘要</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.08);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,0.12);border-radius:12px;padding:14px;">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+            <div style="width:6px;height:6px;border-radius:50%;background:#4ecdc4;"></div>
+            <span style="font-size:8px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;">创意构建</span>
+          </div>
+          <div style="font-size:11px;font-weight:600;color:#f5f5f7;line-height:1.3;">Content Factory</div>
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);margin-top:4px;line-height:1.4;">多智能体内容工厂</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · 深色磨砂玻璃</h3>
+      <p>深色背景 + 毛玻璃卡片 + 彩色分类圆点。沉浸感强，与深色 Hero 区融为一体，苹果 WWDC 风格</p>
+    </div>
+  </div>
+
+</div>

@@ -1,0 +1,113 @@
+<h2>首页整体布局方向</h2>
+<p class="subtitle">三种苹果风格的展示布局���选择最符合你设想的一种</p>
+
+<div class="cards">
+
+  <div class="card" data-choice="a" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f7;padding:16px;font-family:-apple-system,sans-serif;">
+      <div style="background:#000;color:#fff;padding:8px 16px;font-size:11px;display:flex;justify-content:space-between;align-items:center;border-radius:8px 8px 0 0;">
+        <span style="font-weight:600;">Lily OpenClaw</span>
+        <span style="opacity:0.7;font-size:10px;">用例 · Use Cases · 中 / EN</span>
+      </div>
+      <div style="background:linear-gradient(180deg,#1d1d1f 0%,#2d2d2f 100%);padding:32px 16px;text-align:center;border-radius:0 0 8px 8px;">
+        <div style="color:#f5f5f7;font-size:18px;font-weight:700;letter-spacing:-0.5px;">Lily OpenClaw</div>
+        <div style="color:#86868b;font-size:10px;margin-top:4px;">42个真实应用场景 · 6大类别</div>
+        <div style="display:flex;gap:6px;justify-content:center;margin-top:12px;flex-wrap:wrap;">
+          <span style="background:rgba(255,255,255,0.15);color:#f5f5f7;padding:3px 8px;border-radius:20px;font-size:9px;">社交媒体</span>
+          <span style="background:rgba(255,255,255,0.15);color:#f5f5f7;padding:3px 8px;border-radius:20px;font-size:9px;">创意构建</span>
+          <span style="background:rgba(255,255,255,0.15);color:#f5f5f7;padding:3px 8px;border-radius:20px;font-size:9px;">基础设施</span>
+          <span style="background:rgba(255,255,255,0.15);color:#f5f5f7;padding:3px 8px;border-radius:20px;font-size:9px;">生产力</span>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px;">
+        <div style="background:#fff;border-radius:8px;padding:8px;font-size:9px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+          <div style="font-weight:600;color:#1d1d1f;">Daily Reddit Digest</div>
+          <div style="color:#86868b;margin-top:2px;">每日 Reddit 摘要</div>
+        </div>
+        <div style="background:#fff;border-radius:8px;padding:8px;font-size:9px;box-shadow:0 1px 4px rgba(0,0,0,0.08);">
+          <div style="font-weight:600;color:#1d1d1f;">X Account Analysis</div>
+          <div style="color:#86868b;margin-top:2px;">X 账号分析</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>A · 经典苹果风</h3>
+      <p>深色大 Hero 区 → 类别导航胶囊 → 卡片网格。视觉冲击强，品牌感最足，类似 apple.com 产品页</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="b" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f7;padding:16px;font-family:-apple-system,sans-serif;">
+      <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.1);overflow:hidden;">
+        <div style="background:#f5f5f7;padding:8px 12px;font-size:10px;font-weight:600;color:#1d1d1f;border-bottom:1px solid #e5e5e7;display:flex;justify-content:space-between;">
+          <span>Lily OpenClaw 用例</span>
+          <span style="color:#0071e3;">中 / EN</span>
+        </div>
+        <div style="display:flex;">
+          <div style="width:80px;background:#f5f5f7;border-right:1px solid #e5e5e7;padding:8px 6px;flex-shrink:0;">
+            <div style="font-size:8px;color:#86868b;font-weight:600;margin-bottom:6px;text-transform:uppercase;">分类</div>
+            <div style="background:#0071e3;color:#fff;padding:3px 6px;border-radius:4px;font-size:8px;margin-bottom:3px;">社交媒体</div>
+            <div style="color:#1d1d1f;padding:3px 6px;font-size:8px;margin-bottom:3px;">创意构建</div>
+            <div style="color:#1d1d1f;padding:3px 6px;font-size:8px;margin-bottom:3px;">基础设施</div>
+            <div style="color:#1d1d1f;padding:3px 6px;font-size:8px;margin-bottom:3px;">生产力</div>
+            <div style="color:#1d1d1f;padding:3px 6px;font-size:8px;margin-bottom:3px;">研究学习</div>
+            <div style="color:#1d1d1f;padding:3px 6px;font-size:8px;">金融交易</div>
+          </div>
+          <div style="padding:8px;flex:1;">
+            <div style="font-size:10px;font-weight:600;color:#1d1d1f;margin-bottom:6px;">社交媒体 (5)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+              <div style="background:#f5f5f7;border-radius:6px;padding:6px;font-size:8px;">
+                <div style="font-weight:600;">Daily Reddit Digest</div>
+                <div style="color:#86868b;margin-top:1px;">每日 Reddit 摘要</div>
+              </div>
+              <div style="background:#f5f5f7;border-radius:6px;padding:6px;font-size:8px;">
+                <div style="font-weight:600;">X Analysis</div>
+                <div style="color:#86868b;margin-top:1px;">X 账号分析</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>B · 侧边栏导航</h3>
+      <p>左侧固定类别列表 + 右侧内容区。高效浏览，快速切换分类，类似 App Store 或文档站风格</p>
+    </div>
+  </div>
+
+  <div class="card" data-choice="c" onclick="toggleSelect(this)">
+    <div class="card-image" style="background:#f5f5f7;padding:16px;font-family:-apple-system,sans-serif;">
+      <div style="background:#fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,0.1);overflow:hidden;padding:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:11px;font-weight:700;color:#1d1d1f;">Lily OpenClaw</span>
+          <span style="font-size:9px;color:#0071e3;">中 / EN</span>
+        </div>
+        <div style="display:flex;gap:4px;overflow:hidden;margin-bottom:10px;">
+          <span style="background:#1d1d1f;color:#fff;padding:3px 8px;border-radius:20px;font-size:8px;white-space:nowrap;">全部</span>
+          <span style="border:1px solid #d2d2d7;color:#1d1d1f;padding:3px 8px;border-radius:20px;font-size:8px;white-space:nowrap;">社交</span>
+          <span style="border:1px solid #d2d2d7;color:#1d1d1f;padding:3px 8px;border-radius:20px;font-size:8px;white-space:nowrap;">创意</span>
+          <span style="border:1px solid #d2d2d7;color:#1d1d1f;padding:3px 8px;border-radius:20px;font-size:8px;white-space:nowrap;">DevOps</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;">
+          <div style="background:#f5f5f7;border-radius:6px;padding:6px;font-size:7px;">
+            <div style="font-weight:600;color:#1d1d1f;">Reddit Digest</div>
+            <div style="color:#86868b;margin-top:1px;">社交媒体</div>
+          </div>
+          <div style="background:#f5f5f7;border-radius:6px;padding:6px;font-size:7px;">
+            <div style="font-weight:600;color:#1d1d1f;">X Analysis</div>
+            <div style="color:#86868b;margin-top:1px;">社交媒体</div>
+          </div>
+          <div style="background:#f5f5f7;border-radius:6px;padding:6px;font-size:7px;">
+            <div style="font-weight:600;color:#1d1d1f;">Content Factory</div>
+            <div style="color:#86868b;margin-top:1px;">创意构建</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card-body">
+      <h3>C · 标签筛选画廊</h3>
+      <p>顶部标签栏切换分类，下方全量卡片网格。简洁轻量，一屏看到所有内容，类似 GitHub Explore 风格</p>
+    </div>
+  </div>
+
+</div>
