@@ -1,0 +1,22 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+app = FastAPI(title="HealthMeal API", version="1.0.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Routers will be added in later tasks
+# from routers import auth, profile, exercise, admin
+# app.include_router(auth.router, prefix="/auth", tags=["auth"])
+# app.include_router(profile.router, prefix="/profile", tags=["profile"])
+# app.include_router(exercise.router, prefix="/exercise-logs", tags=["exercise"])
+# app.include_router(admin.router, prefix="/admin", tags=["admin"])
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
