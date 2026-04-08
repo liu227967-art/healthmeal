@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react"
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert } from "react-native"
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform } from "react-native"
 import { Picker } from "@react-native-picker/picker"
 import { getProfile, updateProfile, ProfileData } from "../../services/profile"
+import { api } from "../../services/api"
 import { zh } from "../../i18n/zh"
 
 export default function ProfileScreen() {
@@ -33,6 +34,39 @@ export default function ProfileScreen() {
       Alert.alert("", zh.common.success)
     } catch {
       Alert.alert(zh.common.error)
+    }
+  }
+
+  async function handleSyncAppleHealth() {
+    if (Platform.OS !== "ios") {
+      Alert.alert("提示", "Apple Health 仅在 iOS 设备上可用")
+      return
+    }
+    try {
+      const AppleHealthKit = require("react-native-health").default
+      const PERMS = require("react-native-health").HealthKitPermissions
+      await new Promise<void>((resolve, reject) => {
+        AppleHealthKit.initHealthKit(
+          { permissions: { read: [PERMS.Steps, PERMS.ActiveEnergyBurned] } },
+          (err: any) => { err ? reject(err) : resolve() }
+        )
+      })
+      const today = new Date()
+      const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString()
+      const steps: number = await new Promise((resolve, reject) => {
+        AppleHealthKit.getStepCount(
+          { date: startOfDay },
+          (err: any, results: any) => err ? reject(err) : resolve(results?.value || 0)
+        )
+      })
+      const calories = Math.round(steps * 0.04)
+      await api.post("/exercise-logs", {
+        type: "cardio",
+        detail: { activity: "walking", duration_min: Math.round(steps / 100), intensity: "low", steps }
+      })
+      Alert.alert("同步成功", `今日步数：${steps}步，消耗约 ${calories}kcal`)
+    } catch {
+      Alert.alert("同步失败", "请确保已授权 Apple Health 权限")
     }
   }
 
@@ -80,6 +114,13 @@ export default function ProfileScreen() {
       <TouchableOpacity style={styles.button} onPress={handleSave}>
         <Text style={styles.buttonText}>{t.save}</Text>
       </TouchableOpacity>
+
+      {Platform.OS === "ios" && (
+        <TouchableOpacity style={[styles.button, { backgroundColor: "#ec4899", marginTop: 12 }]}
+          onPress={handleSyncAppleHealth}>
+          <Text style={styles.buttonText}>同步 Apple Health 步数</Text>
+        </TouchableOpacity>
+      )}
     </ScrollView>
   )
 }
