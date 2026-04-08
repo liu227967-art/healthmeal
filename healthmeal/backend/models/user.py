@@ -21,6 +21,9 @@ class User(Base):
     food_logs = relationship("FoodLog", back_populates="user")
     body_metrics = relationship("BodyMetric", back_populates="user")
     bookmarks = relationship("Bookmark", back_populates="user")
+    sent_requests = relationship("Friendship", foreign_keys="Friendship.requester_id", back_populates="requester")
+    received_requests = relationship("Friendship", foreign_keys="Friendship.addressee_id", back_populates="addressee")
+    shopping_lists = relationship("ShoppingList", back_populates="user")
 
 
 class Profile(Base):
