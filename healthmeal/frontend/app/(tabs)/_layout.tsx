@@ -9,6 +9,7 @@ export default function TabLayout() {
       <Tabs.Screen name="tracking" options={{ title: zh.tracking.title }} />
       <Tabs.Screen name="ingredients" options={{ title: zh.ingredients.title }} />
       <Tabs.Screen name="knowledge" options={{ title: zh.knowledge.title }} />
+      <Tabs.Screen name="social" options={{ title: zh.social.title }} />
       <Tabs.Screen name="profile" options={{ title: zh.profile.title }} />
     </Tabs>
   )
