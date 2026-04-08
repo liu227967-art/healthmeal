@@ -128,6 +128,26 @@ def generate_meal_plan(
     return json.loads(raw[start:end])
 
 
+def summarize_article(title: str, content: str) -> dict:
+    """为文章生成中英文摘要。返回：{"zh": str, "en": str}"""
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=512,
+        messages=[{
+            "role": "user",
+            "content": (
+                f"请为以下健康/营养研究文章生成简短摘要（中英文各一句话，80字以内）。\n\n"
+                f"标题：{title}\n内容：{content[:1000]}\n\n"
+                "只返回 JSON，格式：{\"zh\": \"中文摘要\", \"en\": \"English summary\"}"
+            )
+        }]
+    )
+    raw = response.content[0].text.strip()
+    start = raw.find("{")
+    end = raw.rfind("}") + 1
+    return json.loads(raw[start:end])
+
+
 def analyze_food_photo(image_base64: str) -> dict:
     """
     分析食物照片，返回营养信息。

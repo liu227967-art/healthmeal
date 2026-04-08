@@ -1,5 +1,5 @@
 from unittest.mock import patch, MagicMock
-from services.claude_service import identify_ingredients_from_image, generate_meal_plan, analyze_food_photo
+from services.claude_service import identify_ingredients_from_image, generate_meal_plan, analyze_food_photo, summarize_article
 
 
 def test_identify_ingredients_returns_list():
@@ -37,3 +37,16 @@ def test_analyze_food_photo_returns_nutrition():
     assert result["total_calories"] == 400
     assert result["total_protein"] == 18
     assert len(result["items"]) == 2
+
+
+def test_summarize_article_returns_bilingual():
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text='{"zh":"地中海饮食能降低心脏病风险，富含Omega-3和多酚。","en":"Mediterranean diet reduces heart disease risk through Omega-3 and polyphenols."}')]
+    with patch("services.claude_service.client.messages.create", return_value=mock_response):
+        result = summarize_article(
+            "Mediterranean Diet Study",
+            "New study shows benefits of olive oil and fish consumption for cardiovascular health."
+        )
+    assert "zh" in result
+    assert "en" in result
+    assert len(result["zh"]) > 10
