@@ -20,6 +20,7 @@ class User(Base):
     meal_plans = relationship("MealPlan", back_populates="user")
     food_logs = relationship("FoodLog", back_populates="user")
     body_metrics = relationship("BodyMetric", back_populates="user")
+    bookmarks = relationship("Bookmark", back_populates="user")
 
 
 class Profile(Base):
