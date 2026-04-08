@@ -66,7 +66,12 @@
       "Bash(open:*)",
       "Bash(python -m pytest tests/test_meal_models.py -v)",
       "Bash(/Users/liuying/Desktop/lilyproject/healthmeal/backend/models/__init__.py:*)",
-      "Bash(python -m pytest tests/test_meal_api.py -v)"
+      "Bash(python -m pytest tests/test_meal_api.py -v)",
+      "Bash(ls /Users/liuying/Desktop/lilyproject/healthmeal/frontend/app/\\\\\\(tabs\\\\\\)/)",
+      "Bash(python -m pytest tests/test_tracking_models.py -v)",
+      "Bash(python -m pytest tests/test_claude_service.py::test_analyze_food_photo_returns_nutrition -v)",
+      "Bash(python -m pytest tests/test_claude_service.py -v)",
+      "Bash(python -m pytest tests/test_tracking.py -v)"
     ]
   }
 }
