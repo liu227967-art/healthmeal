@@ -1,0 +1,28 @@
+from unittest.mock import patch, MagicMock
+from services.claude_service import identify_ingredients_from_image, generate_meal_plan
+
+
+def test_identify_ingredients_returns_list():
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text='[{"name":"鸡胸肉","quantity":200,"unit":"g"},{"name":"西兰花","quantity":150,"unit":"g"}]')]
+    with patch("services.claude_service.client.messages.create", return_value=mock_response):
+        result = identify_ingredients_from_image("base64imagedata")
+    assert isinstance(result, list)
+    assert len(result) == 2
+    assert result[0]["name"] == "鸡胸肉"
+
+
+def test_generate_meal_plan_returns_dict():
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text='{"breakfast":{"name":"燕麦粥","calories":350,"protein":12,"fiber":8,"organs":["肠道","心脏"],"steps":["煮燕麦10分钟","加牛奶搅拌"],"ingredients":["燕麦100g"]},"lunch":{"name":"鸡胸肉沙拉","calories":450,"protein":40,"fiber":6,"organs":["肌肉","肝脏"],"steps":["煮鸡胸肉","切蔬菜","混合"],"ingredients":["鸡胸肉150g"]},"dinner":{"name":"三文鱼蔬菜","calories":500,"protein":35,"fiber":10,"organs":["心脏","大脑"],"steps":["烤三文鱼","炒蔬菜"],"ingredients":["三文鱼150g"]},"summary":{"total_calories":1300,"protein":87,"fiber":24,"anti_inflammatory_score":8.5,"health_notes":"本餐谱富含Omega-3"}}')]
+    with patch("services.claude_service.client.messages.create", return_value=mock_response):
+        result = generate_meal_plan(
+            profile={"weight": 65, "goal": "reduce_fat", "allergies": [], "tdee": 1600},
+            ingredients=["鸡胸肉", "西兰花", "燕麦"],
+            style="chinese",
+            range="daily",
+            exercise_calories=300
+        )
+    assert "breakfast" in result
+    assert "summary" in result
+    assert result["summary"]["protein"] > 0
