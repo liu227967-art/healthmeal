@@ -62,7 +62,11 @@
       "Bash(python -m pytest tests/ -v --tb=short)",
       "Bash(npx create-expo-app:*)",
       "Bash(npx expo:*)",
-      "Bash(python -m pytest tests/ -v)"
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(open:*)",
+      "Bash(python -m pytest tests/test_meal_models.py -v)",
+      "Bash(/Users/liuying/Desktop/lilyproject/healthmeal/backend/models/__init__.py:*)",
+      "Bash(python -m pytest tests/test_meal_api.py -v)"
     ]
   }
 }
