@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routers import auth, profile, exercise, admin, meal, tracking
+from routers import auth, profile, exercise, admin, meal, tracking, knowledge
 
 app = FastAPI(title="HealthMeal API", version="1.0.0")
 
@@ -17,6 +17,7 @@ app.include_router(exercise.router, prefix="/exercise-logs", tags=["exercise"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
 app.include_router(meal.router, tags=["meal"])
 app.include_router(tracking.router, tags=["tracking"])
+app.include_router(knowledge.router, tags=["knowledge"])
 
 @app.get("/health")
 def health():
