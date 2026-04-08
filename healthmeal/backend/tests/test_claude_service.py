@@ -1,5 +1,5 @@
 from unittest.mock import patch, MagicMock
-from services.claude_service import identify_ingredients_from_image, generate_meal_plan
+from services.claude_service import identify_ingredients_from_image, generate_meal_plan, analyze_food_photo
 
 
 def test_identify_ingredients_returns_list():
@@ -26,3 +26,14 @@ def test_generate_meal_plan_returns_dict():
     assert "breakfast" in result
     assert "summary" in result
     assert result["summary"]["protein"] > 0
+
+
+def test_analyze_food_photo_returns_nutrition():
+    mock_response = MagicMock()
+    mock_response.content = [MagicMock(text='{"items":[{"name":"炒鸡蛋","calories":180,"protein":14,"fiber":0,"anti_inflammatory":5},{"name":"米饭","calories":220,"protein":4,"fiber":1,"anti_inflammatory":3}],"total_calories":400,"total_protein":18,"total_fiber":1,"anti_inflammatory_score":4.0,"organs":["心脏","肌肉"]}')]
+    with patch("services.claude_service.client.messages.create", return_value=mock_response):
+        result = analyze_food_photo("base64imagedata")
+    assert "items" in result
+    assert result["total_calories"] == 400
+    assert result["total_protein"] == 18
+    assert len(result["items"]) == 2

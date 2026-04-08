@@ -126,3 +126,45 @@ def generate_meal_plan(
     start = raw.find("{")
     end = raw.rfind("}") + 1
     return json.loads(raw[start:end])
+
+
+def analyze_food_photo(image_base64: str) -> dict:
+    """
+    分析食物照片，返回营养信息。
+    返回格式：{
+      "items": [{"name": str, "calories": float, "protein": float, "fiber": float, "anti_inflammatory": float}],
+      "total_calories": float, "total_protein": float, "total_fiber": float,
+      "anti_inflammatory_score": float, "organs": [str]
+    }
+    """
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=1024,
+        messages=[{
+            "role": "user",
+            "content": [
+                {
+                    "type": "image",
+                    "source": {
+                        "type": "base64",
+                        "media_type": "image/jpeg",
+                        "data": image_base64,
+                    },
+                },
+                {
+                    "type": "text",
+                    "text": (
+                        "请识别图片中的食物，估算每种食物的营养成分和热量。"
+                        "只返回 JSON，不输出其他文字。格式：\n"
+                        '{"items":[{"name":"食物名","calories":数字,"protein":数字,"fiber":数字,"anti_inflammatory":0-10评分}],'
+                        '"total_calories":数字,"total_protein":数字,"total_fiber":数字,'
+                        '"anti_inflammatory_score":0-10的综合评分,"organs":["对哪些器官有益"]}'
+                    )
+                }
+            ],
+        }]
+    )
+    raw = response.content[0].text.strip()
+    start = raw.find("{")
+    end = raw.rfind("}") + 1
+    return json.loads(raw[start:end])
