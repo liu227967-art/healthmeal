@@ -18,6 +18,8 @@ class User(Base):
     usage_quotas = relationship("UsageQuota", back_populates="user")
     ingredients = relationship("Ingredient", back_populates="user")
     meal_plans = relationship("MealPlan", back_populates="user")
+    food_logs = relationship("FoodLog", back_populates="user")
+    body_metrics = relationship("BodyMetric", back_populates="user")
 
 
 class Profile(Base):
