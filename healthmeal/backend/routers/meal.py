@@ -58,7 +58,7 @@ def identify_ingredients_from_photo(body: IngredientPhotoRequest,
         raise HTTPException(status_code=402, detail="Trial limit reached. Please upgrade to Pro.")
     from services.claude_service import identify_ingredients_from_image
     today = date.today().isoformat()
-    items = identify_ingredients_from_image(body.image_base64)
+    items = identify_ingredients_from_image(body.image_base64, lang=body.lang)
     created = []
     for item in items:
         ing = Ingredient(user_id=current_user.id, name=item.get("name", "未知"),
@@ -100,20 +100,25 @@ def generate_meal_plan_endpoint(body: MealPlanRequest,
     today_logs = [l for l in all_logs if l.logged_at and l.logged_at.date() == today_date]
     exercise_calories = sum(l.calories_burned for l in today_logs)
 
-    today_str = today_date.isoformat()
+    today_str = body.date or date_cls.today().isoformat()
     today_ingredients = db.query(Ingredient).filter(
         Ingredient.user_id == current_user.id,
         Ingredient.date == today_str
     ).all()
     ingredient_names = [f"{i.name} {i.quantity}{i.unit}" for i in today_ingredients]
+    # 合并用户手动输入的食材
+    for name in (body.ingredients or []):
+        if name not in ingredient_names:
+            ingredient_names.append(name)
 
     content = generate_meal_plan(profile=profile_dict, ingredients=ingredient_names,
                                   style=body.style, range=body.range,
-                                  exercise_calories=exercise_calories)
+                                  exercise_calories=exercise_calories, lang=body.lang)
 
     summary = content.get("summary", {})
     plan = MealPlan(
         user_id=current_user.id, style=body.style, range=body.range,
+        lang=body.lang,
         content_json=json_lib.dumps(content, ensure_ascii=False),
         total_calories=summary.get("total_calories"),
         nutrients_json=json_lib.dumps({

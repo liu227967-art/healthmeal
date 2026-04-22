@@ -7,10 +7,12 @@ from database import Base
 class HealthContent(Base):
     __tablename__ = "health_contents"
     id = Column(Integer, primary_key=True, index=True)
-    type = Column(String, nullable=False)          # article / video
+    type = Column(String, nullable=False)          # article / video / book
     title = Column(String, nullable=False)
     url = Column(String, nullable=False)
     source = Column(String, nullable=False)        # PubMed / YouTube / Bilibili / manual
+    lang = Column(String, default="en")            # zh / en / other
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True)  # NULL=公共内容，有值=个人笔记
     summary_zh = Column(Text)
     summary_en = Column(Text)
     tags = Column(Text, default="[]")              # JSON array of strings

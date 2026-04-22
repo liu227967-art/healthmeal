@@ -4,19 +4,20 @@ import {
   StyleSheet, Alert, ActivityIndicator, Switch
 } from "react-native"
 import * as Sharing from "expo-sharing"
-import * as FileSystem from "expo-file-system"
+import * as FileSystem from "expo-file-system/legacy"
 import {
   generateShoppingList, getShoppingLists, sendFriendRequest,
   getFriendRequests, acceptFriendRequest, getFriends,
   ShoppingListData, FriendshipData
 } from "../../services/social"
-import { zh } from "../../i18n/zh"
-
-const t = zh.social
+import { getMealPlanHistory } from "../../services/meal"
+import { useTranslation } from "../../hooks/useTranslation"
 
 type TabKey = "shopping" | "friends" | "requests"
 
 function ShoppingListView() {
+  const { t: i18n, language } = useTranslation()
+  const t = i18n.social
   const [lists, setLists] = useState<ShoppingListData[]>([])
   const [generating, setGenerating] = useState(false)
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({})
@@ -33,10 +34,10 @@ function ShoppingListView() {
   async function handleGenerate() {
     setGenerating(true)
     try {
-      await generateShoppingList()
+      await generateShoppingList(language)
       await load()
     } catch {
-      Alert.alert(zh.common.error, t.noItems)
+      Alert.alert(i18n.common.error, t.noItems)
     } finally {
       setGenerating(false)
     }
@@ -67,7 +68,7 @@ function ShoppingListView() {
             return (
               <View key={i} style={styles.itemRow}>
                 <Switch value={checked} onValueChange={() => toggleItem(latest.id, item.name)}
-                  trackColor={{ false: "#e5e7eb", true: "#22c55e" }} />
+                  trackColor={{ false: "#e8f0e8", true: "#16a34a" }} />
                 <Text style={[styles.itemText, checked && styles.itemChecked]}>
                   {item.name} {item.quantity}{item.unit}
                 </Text>
@@ -83,6 +84,8 @@ function ShoppingListView() {
 }
 
 function FriendsView() {
+  const { t: i18n } = useTranslation()
+  const t = i18n.social
   const [friends, setFriends] = useState<FriendshipData[]>([])
   const [email, setEmail] = useState("")
   const [sending, setSending] = useState(false)
@@ -104,21 +107,56 @@ function FriendsView() {
       setEmail("")
       Alert.alert("", "好友申请已发送")
     } catch {
-      Alert.alert(zh.common.error, "用户不存在或已发送过申请")
+      Alert.alert(i18n.common.error, "用户不存在或已发送过申请")
     } finally {
       setSending(false)
     }
   }
 
   async function handleShareMealPlan() {
-    const text = `${t.shareTitle}\n通过 HealthMeal App 生成 — 科学饮食，健康生活`
-    const available = await Sharing.isAvailableAsync()
-    if (available) {
-      const fileUri = (FileSystem.documentDirectory || "") + "meal_plan.txt"
-      await FileSystem.writeAsStringAsync(fileUri, text)
-      await Sharing.shareAsync(fileUri)
-    } else {
-      Alert.alert("", "当前设备不支持分享功能")
+    try {
+      const history = await getMealPlanHistory()
+      if (!history || history.length === 0) {
+        Alert.alert("", "还没有生成过餐谱，请先去餐谱页生成")
+        return
+      }
+      const plan = history[0]
+      const c = plan.content
+      let text = `🍽 我的今日餐谱（HealthMeal）\n\n`
+      if (c.breakfast) {
+        text += `🌅 早餐：${c.breakfast.name}\n   ${c.breakfast.calories}kcal · 蛋白质${c.breakfast.protein}g\n`
+        if (c.breakfast.ingredients?.length) text += `   食材：${c.breakfast.ingredients.join("、")}\n`
+        if (c.breakfast.steps?.length) text += `   做法：\n${c.breakfast.steps.map((s, i) => `   ${i + 1}. ${s}`).join("\n")}\n`
+        text += "\n"
+      }
+      if (c.lunch) {
+        text += `☀️ 午餐：${c.lunch.name}\n   ${c.lunch.calories}kcal · 蛋白质${c.lunch.protein}g\n`
+        if (c.lunch.ingredients?.length) text += `   食材：${c.lunch.ingredients.join("、")}\n`
+        if (c.lunch.steps?.length) text += `   做法：\n${c.lunch.steps.map((s, i) => `   ${i + 1}. ${s}`).join("\n")}\n`
+        text += "\n"
+      }
+      if (c.dinner) {
+        text += `🌙 晚餐：${c.dinner.name}\n   ${c.dinner.calories}kcal · 蛋白质${c.dinner.protein}g\n`
+        if (c.dinner.ingredients?.length) text += `   食材：${c.dinner.ingredients.join("、")}\n`
+        if (c.dinner.steps?.length) text += `   做法：\n${c.dinner.steps.map((s, i) => `   ${i + 1}. ${s}`).join("\n")}\n`
+        text += "\n"
+      }
+      if (c.summary) {
+        text += `📊 今日合计：${c.summary.total_calories}kcal · 抗炎评分${c.summary.anti_inflammatory_score}/10\n`
+        if (c.summary.health_notes) text += `💡 ${c.summary.health_notes}\n`
+      }
+      text += `\n— 通过 HealthMeal App 生成`
+
+      const available = await Sharing.isAvailableAsync()
+      if (available) {
+        const fileUri = (FileSystem.documentDirectory || "") + "meal_plan.txt"
+        await FileSystem.writeAsStringAsync(fileUri, text)
+        await Sharing.shareAsync(fileUri)
+      } else {
+        Alert.alert("", "当前设备不支持分享功能")
+      }
+    } catch (e: any) {
+      Alert.alert(i18n.common.error, `获取餐谱失败：${e?.message || e}`)
     }
   }
 
@@ -153,6 +191,8 @@ function FriendsView() {
 }
 
 function RequestsView() {
+  const { t: i18n } = useTranslation()
+  const t = i18n.social
   const [requests, setRequests] = useState<FriendshipData[]>([])
 
   const load = useCallback(async () => {
@@ -170,7 +210,7 @@ function RequestsView() {
       setRequests(prev => prev.filter(r => r.id !== id))
       Alert.alert("", "已接受好友申请")
     } catch {
-      Alert.alert(zh.common.error)
+      Alert.alert(i18n.common.error)
     }
   }
 
@@ -193,6 +233,8 @@ function RequestsView() {
 }
 
 export default function SocialScreen() {
+  const { t: i18n } = useTranslation()
+  const t = i18n.social
   const [tab, setTab] = useState<TabKey>("shopping")
 
   const tabs: Array<{ key: TabKey; label: string }> = [
@@ -222,29 +264,29 @@ export default function SocialScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  tabRow: { flexDirection: "row", backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#e5e7eb" },
+  container: { flex: 1, backgroundColor: "#f2f7f2" },
+  tabRow: { flexDirection: "row", backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#e8f0e8" },
   tabBtn: { flex: 1, paddingVertical: 12, alignItems: "center" },
-  tabBtnActive: { borderBottomWidth: 2, borderBottomColor: "#22c55e" },
+  tabBtnActive: { borderBottomWidth: 2, borderBottomColor: "#16a34a" },
   tabText: { fontSize: 13, color: "#9ca3af" },
-  tabTextActive: { color: "#22c55e", fontWeight: "600" },
+  tabTextActive: { color: "#16a34a", fontWeight: "600" },
   content: { padding: 16, paddingBottom: 40 },
-  primaryBtn: { backgroundColor: "#22c55e", borderRadius: 8, padding: 14, alignItems: "center", marginBottom: 16 },
+  primaryBtn: { backgroundColor: "#16a34a", borderRadius: 14, height: 52, justifyContent: "center", alignItems: "center", marginBottom: 16 },
   primaryBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
-  card: { backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12 },
-  cardTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 12, color: "#111827" },
+  card: { backgroundColor: "#fff", borderRadius: 16, padding: 16, marginBottom: 12, shadowColor: "#000", shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 },
+  cardTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 12, color: "#1a1a1a" },
   itemRow: { flexDirection: "row", alignItems: "center", paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: "#f0f0f0" },
-  itemText: { marginLeft: 12, fontSize: 15, color: "#374151" },
+  itemText: { marginLeft: 12, fontSize: 15, color: "#1a1a1a" },
   itemChecked: { textDecorationLine: "line-through", color: "#9ca3af" },
   empty: { textAlign: "center", color: "#9ca3af", marginTop: 40, fontSize: 15 },
-  sectionTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 8, color: "#111827" },
+  sectionTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 8, color: "#1a1a1a" },
   friendRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#fff", borderRadius: 8, padding: 14, marginBottom: 8 },
   requestRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#fff", borderRadius: 8, padding: 14, marginBottom: 8 },
-  friendEmail: { fontSize: 14, color: "#374151", flex: 1 },
-  acceptedBadge: { fontSize: 12, color: "#22c55e", fontWeight: "600" },
-  acceptBtn: { backgroundColor: "#22c55e", borderRadius: 6, paddingHorizontal: 12, paddingVertical: 6 },
+  friendEmail: { fontSize: 14, color: "#1a1a1a", flex: 1 },
+  acceptedBadge: { fontSize: 12, color: "#16a34a", fontWeight: "600" },
+  acceptBtn: { backgroundColor: "#16a34a", borderRadius: 6, paddingHorizontal: 12, paddingVertical: 6 },
   acceptBtnText: { color: "#fff", fontSize: 13, fontWeight: "600" },
-  input: { borderWidth: 1, borderColor: "#e5e7eb", borderRadius: 8, padding: 10, marginBottom: 10, fontSize: 15 },
+  input: { borderWidth: 1, borderColor: "#e8f0e8", borderRadius: 12, padding: 10, marginBottom: 10, fontSize: 15 },
   sendBtn: { backgroundColor: "#3b82f6", borderRadius: 8, padding: 12, alignItems: "center" },
   sendBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
 })

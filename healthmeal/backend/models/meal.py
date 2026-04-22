@@ -24,6 +24,7 @@ class MealPlan(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     style = Column(String, nullable=False)        # mediterranean/japanese/chinese/western/other
     range = Column(String, nullable=False)        # daily/weekly/monthly
+    lang = Column(String, default="zh")            # zh / en
     content_json = Column(Text, nullable=False)   # 完整餐谱 JSON
     total_calories = Column(Float)
     nutrients_json = Column(Text)                 # 营养素汇总 JSON

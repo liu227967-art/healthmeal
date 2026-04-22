@@ -1,10 +1,8 @@
 import feedparser
 
 HEALTH_RSS_FEEDS = [
-    {"name": "PubMed Nutrition", "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/?term=nutrition+diet&format=rss"},
-    {"name": "PubMed Anti-inflammatory", "url": "https://pubmed.ncbi.nlm.nih.gov/rss/search/?term=anti-inflammatory+food&format=rss"},
-    {"name": "Harvard Health", "url": "https://www.health.harvard.edu/blog/feed"},
-    {"name": "Nutrition.gov", "url": "https://www.nutrition.gov/rss.xml"},
+    {"name": "NutritionFacts.org", "url": "https://nutritionfacts.org/feed/", "lang": "en"},
+    {"name": "NutritionFacts视频", "url": "https://nutritionfacts.org/feed/?post_type=video", "lang": "en"},
 ]
 
 

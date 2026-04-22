@@ -4,9 +4,7 @@ import { StyleSheet, Text, View } from 'react-native';
 export default function App() {
   return (
     <View style={styles.container}>
-      <Text>健康餐管理 App</Text>
-      <Text>目标热量：1016 大卡</Text>
-      <Text>宏量比：4:4:2</Text>
+      <Text>Open up App.tsx to start working on your app!</Text>
       <StatusBar style="auto" />
     </View>
   );

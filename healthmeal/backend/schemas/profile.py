@@ -9,6 +9,7 @@ class ProfileRequest(BaseModel):
     age: Optional[int] = None
     gender: Optional[str] = None
     goal: Optional[str] = None
+    activity_level: Optional[str] = None   # sedentary/light/moderate/active/very_active
     allergies: Optional[List[str]] = []
 
 
@@ -19,6 +20,7 @@ class ProfileResponse(BaseModel):
     age: Optional[int]
     gender: Optional[str]
     goal: Optional[str]
+    activity_level: Optional[str]
     allergies: List[str]
     tdee: Optional[float]
 

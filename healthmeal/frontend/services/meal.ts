@@ -65,13 +65,13 @@ export async function deleteIngredient(id: number): Promise<void> {
   await api.delete(`/ingredients/${id}`)
 }
 
-export async function identifyIngredientsFromPhoto(imageBase64: string): Promise<IngredientData[]> {
-  const res = await api.post("/ingredients/identify-photo", { image_base64: imageBase64 })
+export async function identifyIngredientsFromPhoto(imageBase64: string, lang = "zh"): Promise<IngredientData[]> {
+  const res = await api.post("/ingredients/identify-photo", { image_base64: imageBase64, lang })
   return res.data
 }
 
-export async function generateMealPlan(style: string, range: string): Promise<MealPlanData> {
-  const res = await api.post("/meal-plans/generate", { style, range })
+export async function generateMealPlan(style: string, range: string, ingredients?: string[], date?: string, lang = "zh"): Promise<MealPlanData> {
+  const res = await api.post("/meal-plans/generate", { style, range, ingredients, date, lang })
   return res.data
 }
 

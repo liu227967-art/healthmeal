@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional, List, Any
+from typing import Optional, List, Any, Dict
 from datetime import datetime
 
 
@@ -26,20 +26,24 @@ class IngredientResponse(BaseModel):
 
 class IngredientPhotoRequest(BaseModel):
     image_base64: str
+    lang: str = "zh"
 
 
 class MealPlanRequest(BaseModel):
-    style: str   # mediterranean/japanese/chinese/western/other
-    range: str   # daily/weekly/monthly
+    style: str
+    range: str
+    ingredients: list[str] = []
+    date: Optional[str] = None
+    lang: str = "zh"
 
 
 class MealPlanResponse(BaseModel):
     id: int
     style: str
     range: str
-    content: dict[str, Any]
+    content: Dict[str, Any]
     total_calories: Optional[float]
-    nutrients: Optional[dict[str, Any]]
+    nutrients: Optional[Dict[str, Any]]
     created_at: datetime
 
     class Config:

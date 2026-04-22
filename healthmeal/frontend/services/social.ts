@@ -22,8 +22,8 @@ export interface FriendshipData {
   created_at: string
 }
 
-export async function generateShoppingList(): Promise<ShoppingListData> {
-  const res = await api.post("/shopping-list/generate")
+export async function generateShoppingList(lang = "zh"): Promise<ShoppingListData> {
+  const res = await api.post("/shopping-list/generate", { lang })
   return res.data
 }
 

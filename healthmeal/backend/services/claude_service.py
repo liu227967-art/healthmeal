@@ -1,16 +1,46 @@
 import anthropic
+import base64
 import json
 import os
+from io import BytesIO
 from dotenv import load_dotenv
+from PIL import Image
 
 load_dotenv()
 
-client = anthropic.Anthropic(api_key=os.getenv("ANTHROPIC_API_KEY"))
+client = anthropic.Anthropic(
+    api_key=os.getenv("ANTHROPIC_API_KEY"),
+    base_url=os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
+)
 MODEL = "claude-opus-4-6"
 
 
-def identify_ingredients_from_image(image_base64: str) -> list[dict]:
+def _resize_image_base64(image_base64: str, max_px: int = 1024, quality: int = 75) -> str:
+    """将图片压缩到 max_px × max_px 以内，避免 API 400 请求过大错误。"""
+    raw = base64.b64decode(image_base64)
+    img = Image.open(BytesIO(raw)).convert("RGB")
+    if max(img.size) > max_px:
+        img.thumbnail((max_px, max_px), Image.LANCZOS)
+    buf = BytesIO()
+    img.save(buf, format="JPEG", quality=quality)
+    return base64.b64encode(buf.getvalue()).decode()
+
+
+def identify_ingredients_from_image(image_base64: str, lang: str = "zh") -> list[dict]:
     """识别图片中的食材，返回 [{"name": str, "quantity": float, "unit": str}, ...]"""
+    image_base64 = _resize_image_base64(image_base64)
+    if lang == "en":
+        prompt = (
+            "Identify all ingredients in the image and estimate their quantities. "
+            "Return ONLY a JSON array, format: [{\"name\": \"ingredient name\", \"quantity\": number, \"unit\": \"g or ml or pc\"}]. "
+            "No other text."
+        )
+    else:
+        prompt = (
+            "请识别图片中所有食材，估算每种食材的大概数量。"
+            "只返回 JSON 数组，格式：[{\"name\": \"食材名\", \"quantity\": 数字, \"unit\": \"g或ml或个\"}]"
+            "不要输出任何其他文字。"
+        )
     response = client.messages.create(
         model=MODEL,
         max_tokens=1024,
@@ -27,11 +57,7 @@ def identify_ingredients_from_image(image_base64: str) -> list[dict]:
                 },
                 {
                     "type": "text",
-                    "text": (
-                        "请识别图片中所有食材，估算每种食材的大概数量。"
-                        "只返回 JSON 数组，格式：[{\"name\": \"食材名\", \"quantity\": 数字, \"unit\": \"g或ml或个\"}]"
-                        "不要输出任何其他文字。"
-                    )
+                    "text": prompt
                 }
             ],
         }]
@@ -47,26 +73,26 @@ def generate_meal_plan(
     ingredients: list[str],
     style: str,
     range: str,
-    exercise_calories: float = 0
+    exercise_calories: float = 0,
+    lang: str = "zh"
 ) -> dict:
     """生成个性化餐谱。profile: {weight, goal, allergies, tdee}"""
-    style_map = {
-        "mediterranean": "地中海饮食",
-        "japanese": "日式料理",
-        "chinese": "中式料理",
-        "western": "西式料理",
-        "other": "均衡饮食"
+    style_map_zh = {
+        "mediterranean": "地中海饮食", "japanese": "日式料理", "chinese": "中式料理",
+        "western": "西式料理", "korean": "韩式料理", "thai": "泰式料理",
+        "indian": "印度料理", "vegetarian": "素食", "vegan": "纯素",
+        "lowcarb": "低碳/生酮", "highprotein": "高蛋白", "light": "清淡", "other": "均衡饮食"
     }
-    range_map = {
-        "daily": "今日（早中晚三餐）",
-        "weekly": "本周7天（每天三餐）",
-        "monthly": "本月（按周规划）"
+    style_map_en = {
+        "mediterranean": "Mediterranean", "japanese": "Japanese", "chinese": "Chinese",
+        "western": "Western", "korean": "Korean", "thai": "Thai",
+        "indian": "Indian", "vegetarian": "Vegetarian", "vegan": "Vegan",
+        "lowcarb": "Low-Carb/Keto", "highprotein": "High-Protein", "light": "Light", "other": "Balanced"
     }
-    goal_map = {
-        "reduce_fat": "减脂",
-        "maintain": "维持体重",
-        "gain_muscle": "增肌"
-    }
+    range_map_zh = {"daily": "今日（早中晚三餐）", "weekly": "本周7天（每天三餐）", "monthly": "本月（按周规划）"}
+    range_map_en = {"daily": "today (breakfast, lunch, dinner)", "weekly": "this week (7 days, 3 meals each)", "monthly": "this month (weekly plan)"}
+    goal_map_zh = {"reduce_fat": "减脂", "maintain": "维持体重", "gain_muscle": "增肌"}
+    goal_map_en = {"reduce_fat": "fat loss", "maintain": "maintain weight", "gain_muscle": "muscle gain"}
 
     weight = profile.get("weight", 65)
     goal = profile.get("goal", "maintain")
@@ -75,13 +101,60 @@ def generate_meal_plan(
     target_calories = tdee - exercise_calories if exercise_calories else tdee
     target_protein = round(weight * (2.0 if goal == "gain_muscle" else 1.6), 0)
 
-    allergy_str = "、".join(allergies) if allergies else "无"
-    ingredients_str = "、".join(ingredients) if ingredients else "不限"
+    if lang == "en":
+        allergy_str = ", ".join(allergies) if allergies else "none"
+        ingredients_str = ", ".join(ingredients) if ingredients else "no restriction"
+        style_label = style_map_en.get(style, "Balanced")
+        range_label = range_map_en.get(range, "today")
+        goal_label = goal_map_en.get(goal, "maintain weight")
+        prompt = f"""Please create a {style_label} meal plan for {range_label}.
 
-    prompt = f"""请为我制定{range_map.get(range, "今日")}的{style_map.get(style, "均衡")}餐谱。
+User profile:
+- Weight: {weight}kg, Goal: {goal_label}
+- Daily calorie target: {target_calories:.0f} kcal
+- Protein target: {target_protein:.0f}g/day
+- Food allergies: {allergy_str}
+- Available ingredients: {ingredients_str}
+
+Health requirements:
+1. Anti-inflammatory: prioritize Omega-3, polyphenols, curcumin
+2. Protein: at least {target_protein:.0f}g/day
+3. Vitamins: cover A/B/C/D/E/K
+4. Minerals: calcium, iron, magnesium, zinc, potassium
+5. Fiber: 25-35g/day
+6. Organ health: note benefits for heart/liver/gut/kidney/bones
+
+Return ONLY JSON, no other text. Format (daily example):
+{{
+  "breakfast": {{
+    "name": "meal name",
+    "calories": number,
+    "protein": number,
+    "fiber": number,
+    "organs": ["organ list"],
+    "steps": ["step 1", "step 2"],
+    "ingredients": ["ingredient 1 100g", "ingredient 2 50g"]
+  }},
+  "lunch": {{ same }},
+  "dinner": {{ same }},
+  "summary": {{
+    "total_calories": number,
+    "protein": number,
+    "fiber": number,
+    "anti_inflammatory_score": 0-10,
+    "health_notes": "one-line health comment"
+  }}
+}}"""
+    else:
+        allergy_str = "、".join(allergies) if allergies else "无"
+        ingredients_str = "、".join(ingredients) if ingredients else "不限"
+        style_label = style_map_zh.get(style, "均衡饮食")
+        range_label = range_map_zh.get(range, "今日")
+        goal_label = goal_map_zh.get(goal, "维持体重")
+        prompt = f"""请为我制定{range_label}的{style_label}餐谱。
 
 用户信息：
-- 体重：{weight}kg，目标：{goal_map.get(goal, "维持")}
+- 体重：{weight}kg，目标：{goal_label}
 - 每日热量目标：{target_calories:.0f} kcal
 - 蛋白质目标：{target_protein:.0f}g/天
 - 过敏食物：{allergy_str}
@@ -157,6 +230,7 @@ def analyze_food_photo(image_base64: str) -> dict:
       "anti_inflammatory_score": float, "organs": [str]
     }
     """
+    image_base64 = _resize_image_base64(image_base64)
     response = client.messages.create(
         model=MODEL,
         max_tokens=1024,

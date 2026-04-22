@@ -50,10 +50,10 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 24, backgroundColor: "#fff" },
-  title: { fontSize: 28, fontWeight: "bold", marginBottom: 32, textAlign: "center" },
-  input: { borderWidth: 1, borderColor: "#ddd", borderRadius: 8, padding: 12, marginBottom: 16, fontSize: 16 },
-  button: { backgroundColor: "#22c55e", borderRadius: 8, padding: 14, alignItems: "center", marginBottom: 16 },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  link: { textAlign: "center", color: "#22c55e", fontSize: 14 },
+  container: { flex: 1, justifyContent: "center", padding: 28, backgroundColor: "#f2f7f2" },
+  title: { fontSize: 32, fontWeight: "700", marginBottom: 36, textAlign: "center", color: "#1a1a1a" },
+  input: { borderWidth: 1, borderColor: "#e8f0e8", borderRadius: 14, padding: 16, marginBottom: 14, fontSize: 16, backgroundColor: "#fff" },
+  button: { backgroundColor: "#16a34a", borderRadius: 14, height: 52, alignItems: "center", justifyContent: "center", marginBottom: 16, shadowColor: "#16a34a", shadowOpacity: 0.3, shadowRadius: 8, elevation: 4 },
+  buttonText: { color: "#fff", fontSize: 17, fontWeight: "600" },
+  link: { textAlign: "center", color: "#16a34a", fontSize: 15, marginTop: 4 },
 })

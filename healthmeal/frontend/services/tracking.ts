@@ -94,6 +94,14 @@ export async function getBodyMetrics(): Promise<BodyMetricData[]> {
   return res.data
 }
 
+export async function logExercise(data: {
+  type: "cardio" | "strength"
+  detail: Record<string, any>
+}): Promise<{ id: number; calories_burned: number }> {
+  const res = await api.post("/exercise-logs", data)
+  return res.data
+}
+
 export async function getDailySummary(date: string): Promise<DailySummary> {
   const res = await api.get(`/health-summary?period=daily&date=${date}`)
   return res.data

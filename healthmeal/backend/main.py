@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers import auth, profile, exercise, admin, meal, tracking, knowledge, social
+from database import engine, Base
+import models.user, models.meal, models.tracking, models.knowledge, models.social
+
+# 启动时自动建表
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="HealthMeal API", version="1.0.0")
 

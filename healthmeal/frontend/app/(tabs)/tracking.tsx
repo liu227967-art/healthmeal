@@ -1,20 +1,20 @@
 import { useState, useEffect, useCallback } from "react"
 import {
   View, Text, ScrollView, TouchableOpacity,
-  TextInput, StyleSheet, Alert, ActivityIndicator, Modal
+  TextInput, StyleSheet, Alert, ActivityIndicator, Modal,
+  KeyboardAvoidingView, Platform, Keyboard
 } from "react-native"
 import * as ImagePicker from "expo-image-picker"
 import {
   addFoodLog, addFoodLogFromPhoto, getDailySummary,
-  getWeeklySummary, getMonthlySummary,
+  getWeeklySummary, getMonthlySummary, logExercise,
   FoodLogData, DailySummary, WeeklySummary, MonthlySummary
 } from "../../services/tracking"
-import { zh } from "../../i18n/zh"
+import { useTranslation } from "../../hooks/useTranslation"
 
-const t = zh.tracking
 const todayStr = () => new Date().toISOString().split("T")[0]
 
-function ProgressBar({ value, target, color = "#22c55e" }: { value: number; target: number; color?: string }) {
+function ProgressBar({ value, target, color = "#16a34a" }: { value: number; target: number; color?: string }) {
   const pct = Math.min((value / (target || 1)) * 100, 100)
   return (
     <View style={pb.track}>
@@ -23,17 +23,30 @@ function ProgressBar({ value, target, color = "#22c55e" }: { value: number; targ
   )
 }
 const pb = StyleSheet.create({
-  track: { height: 8, backgroundColor: "#e5e7eb", borderRadius: 4, marginVertical: 4 },
+  track: { height: 8, backgroundColor: "#e8f0e8", borderRadius: 4, marginVertical: 4 },
   fill: { height: 8, borderRadius: 4 },
 })
 
 export default function TrackingScreen() {
+  const { t: i18n } = useTranslation()
+  const t = i18n.tracking
+  const te = i18n.exercise
   const [tab, setTab] = useState<"daily" | "weekly" | "monthly">("daily")
   const [dailySummary, setDailySummary] = useState<DailySummary | null>(null)
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null)
   const [monthlySummary, setMonthlySummary] = useState<MonthlySummary | null>(null)
   const [loading, setLoading] = useState(false)
   const [showAddModal, setShowAddModal] = useState(false)
+  const [showExerciseModal, setShowExerciseModal] = useState(false)
+  const [exerciseType, setExerciseType] = useState<"cardio" | "strength">("cardio")
+  const [exerciseActivity, setExerciseActivity] = useState("walking")
+  const [exerciseDuration, setExerciseDuration] = useState("")
+  const [exerciseSets, setExerciseSets] = useState("")
+  const [exerciseReps, setExerciseReps] = useState("")
+  const [exerciseWeight, setExerciseWeight] = useState("")
+  const [strengthExercise, setStrengthExercise] = useState("squat")
+  const [customExercise, setCustomExercise] = useState("")
+  const [exerciseIntensity, setExerciseIntensity] = useState("moderate")
   const [mealType, setMealType] = useState("breakfast")
   const [foodName, setFoodName] = useState("")
   const [calories, setCalories] = useState("")
@@ -65,7 +78,8 @@ export default function TrackingScreen() {
   useEffect(() => { loadData() }, [loadData])
 
   async function handleAddManual() {
-    if (!foodName.trim() || !calories) return
+    if (!foodName.trim()) { Alert.alert("请输入食物名称"); return }
+    if (!calories) { Alert.alert("请输入热量"); return }
     try {
       await addFoodLog({
         meal_type: mealType,
@@ -83,22 +97,41 @@ export default function TrackingScreen() {
       setShowAddModal(false)
       await loadData()
     } catch {
-      Alert.alert(zh.common.error)
+      Alert.alert(i18n.common.error)
+    }
+  }
+
+  async function handleLogExercise() {
+    const detail = exerciseType === "cardio"
+      ? { activity: exerciseActivity, duration_min: parseFloat(exerciseDuration) || 0, intensity: exerciseIntensity }
+      : { exercise: strengthExercise === "custom" ? (customExercise.trim() || "自定义") : strengthExercise, sets: parseFloat(exerciseSets) || 0, reps: parseFloat(exerciseReps) || 0, weight_kg: parseFloat(exerciseWeight) || 0 }
+    try {
+      const res = await logExercise({ type: exerciseType, detail })
+      setShowExerciseModal(false)
+      setExerciseDuration(""); setExerciseSets(""); setExerciseReps(""); setExerciseWeight("")
+      await loadData()
+      Alert.alert("", `${te.successMsg} ${res.calories_burned} ${te.kcal}`)
+    } catch {
+      Alert.alert(i18n.common.error)
     }
   }
 
   async function handlePhoto() {
     const perm = await ImagePicker.requestCameraPermissionsAsync()
-    if (!perm.granted) { Alert.alert("需要相机权限"); return }
+    if (!perm.granted) { Alert.alert(t.needAlbumPerm); return }
     const result = await ImagePicker.launchCameraAsync({ base64: true, quality: 0.7 })
-    if (result.canceled || !result.assets?.[0]?.base64) return
+    if (result.canceled || !result.assets?.length) return
     setAnalyzing(true)
     setShowAddModal(false)
     try {
-      await addFoodLogFromPhoto(mealType, result.assets[0].base64)
+      for (const asset of result.assets) {
+        if (asset.base64) {
+          await addFoodLogFromPhoto(mealType, asset.base64)
+        }
+      }
       await loadData()
     } catch {
-      Alert.alert(zh.common.error, "分析失败，请重试")
+      Alert.alert(i18n.common.error, "分析失败，请重试")
     } finally {
       setAnalyzing(false)
     }
@@ -122,7 +155,7 @@ export default function TrackingScreen() {
       </View>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#22c55e" style={{ marginTop: 40 }} />
+        <ActivityIndicator size="large" color="#16a34a" style={{ marginTop: 40 }} />
       ) : (
         <ScrollView contentContainerStyle={styles.content}>
 
@@ -130,7 +163,7 @@ export default function TrackingScreen() {
           {tab === "daily" && dailySummary && (
             <View>
               <View style={styles.statsCard}>
-                <Text style={styles.cardTitle}>今日营养</Text>
+                <Text style={styles.cardTitle}>{t.todayNutrition}</Text>
                 <Text style={styles.statLine}>{t.totalCalories}：<Text style={styles.bold}>{dailySummary.total_calories}</Text> / {dailySummary.target_calories?.toFixed(0)} kcal</Text>
                 <ProgressBar value={dailySummary.total_calories} target={dailySummary.target_calories || 2000} />
                 <Text style={styles.statLine}>{t.totalProtein}：<Text style={styles.bold}>{dailySummary.total_protein}g</Text> / {dailySummary.target_protein?.toFixed(0)}g</Text>
@@ -143,15 +176,36 @@ export default function TrackingScreen() {
               {dailySummary.logs.length === 0 ? (
                 <Text style={styles.empty}>{t.noLogs}</Text>
               ) : (
-                dailySummary.logs.map((log) => (
-                  <View key={log.id} style={styles.logCard}>
-                    <Text style={styles.mealLabel}>{mealLabel(log.meal_type)}</Text>
-                    {log.food_items.map((item, i) => (
-                      <Text key={i} style={styles.foodItem}>{item.name} — {item.calories}kcal · 蛋白质{item.protein}g</Text>
-                    ))}
-                    <Text style={styles.logTotal}>合计：{log.total_calories}kcal · {log.total_protein}g蛋白</Text>
-                  </View>
-                ))
+                (() => {
+                  // 按餐次分组
+                  const groups: Record<string, typeof dailySummary.logs> = {}
+                  const order = ["breakfast", "lunch", "dinner", "snack"]
+                  dailySummary.logs.forEach(log => {
+                    if (!groups[log.meal_type]) groups[log.meal_type] = []
+                    groups[log.meal_type].push(log)
+                  })
+                  return order.filter(k => groups[k]).map(mealType => {
+                    const logs = groups[mealType]
+                    const mealTotalCal = logs.reduce((s, l) => s + l.total_calories, 0)
+                    const mealTotalPro = logs.reduce((s, l) => s + l.total_protein, 0)
+                    return (
+                      <View key={mealType} style={styles.mealGroup}>
+                        <View style={styles.mealGroupHeader}>
+                          <Text style={styles.mealLabel}>{mealLabel(mealType)}</Text>
+                          <Text style={styles.mealGroupTotal}>{mealTotalCal.toFixed(0)} kcal</Text>
+                        </View>
+                        {logs.map(log => (
+                          <View key={log.id} style={styles.logCard}>
+                            {log.food_items.map((item, i) => (
+                              <Text key={i} style={styles.foodItem}>{item.name} — {item.calories}kcal · {t.totalProtein}{item.protein}g</Text>
+                            ))}
+                          </View>
+                        ))}
+                        <Text style={styles.logTotal}>{t.subtotal}：{mealTotalCal.toFixed(0)}kcal · {mealTotalPro.toFixed(1)}g {t.totalProtein}</Text>
+                      </View>
+                    )
+                  })
+                })()
               )}
             </View>
           )}
@@ -160,14 +214,14 @@ export default function TrackingScreen() {
           {tab === "weekly" && weeklySummary && (
             <View>
               <View style={styles.statsCard}>
-                <Text style={styles.cardTitle}>本周趋势 ({weeklySummary.week_start} ~ {weeklySummary.week_end})</Text>
-                <Text style={styles.statLine}>平均蛋白质：<Text style={styles.bold}>{weeklySummary.avg_protein}g/天</Text></Text>
-                <Text style={styles.statLine}>平均膳食纤维：<Text style={styles.bold}>{weeklySummary.avg_fiber}g/天</Text></Text>
-                <Text style={styles.statLine}>平均抗炎评分：<Text style={styles.bold}>{weeklySummary.avg_anti_inflammatory}/10</Text></Text>
-                <Text style={styles.statLine}>运动总消耗：<Text style={styles.bold}>{weeklySummary.total_exercise_calories}kcal</Text></Text>
+                <Text style={styles.cardTitle}>{t.weeklyTrend} ({weeklySummary.week_start} ~ {weeklySummary.week_end})</Text>
+                <Text style={styles.statLine}>{t.avgProtein}：<Text style={styles.bold}>{weeklySummary.avg_protein}g/{i18n.common.perDay}</Text></Text>
+                <Text style={styles.statLine}>{t.avgFiber}：<Text style={styles.bold}>{weeklySummary.avg_fiber}g/{i18n.common.perDay}</Text></Text>
+                <Text style={styles.statLine}>{t.avgAnti}：<Text style={styles.bold}>{weeklySummary.avg_anti_inflammatory}/10</Text></Text>
+                <Text style={styles.statLine}>{t.totalExercise}：<Text style={styles.bold}>{weeklySummary.total_exercise_calories}kcal</Text></Text>
               </View>
               <View style={styles.statsCard}>
-                <Text style={styles.cardTitle}>每日热量</Text>
+                <Text style={styles.cardTitle}>{t.dailyCalories}</Text>
                 {weeklySummary.daily_calories.map((d) => (
                   <View key={d.date} style={styles.dayRow}>
                     <Text style={styles.dayLabel}>{d.date.slice(5)}</Text>
@@ -185,15 +239,15 @@ export default function TrackingScreen() {
           {tab === "monthly" && monthlySummary && (
             <View>
               <View style={styles.statsCard}>
-                <Text style={styles.cardTitle}>{monthlySummary.month} 月度概览</Text>
-                <Text style={styles.statLine}>记录天数：<Text style={styles.bold}>{monthlySummary.total_days_logged}天</Text></Text>
-                <Text style={styles.statLine}>平均抗炎评分：<Text style={styles.bold}>{monthlySummary.avg_anti_inflammatory}/10</Text></Text>
+                <Text style={styles.cardTitle}>{monthlySummary.month} {t.monthOverview}</Text>
+                <Text style={styles.statLine}>{t.daysLogged}：<Text style={styles.bold}>{monthlySummary.total_days_logged}{i18n.common.perDay}</Text></Text>
+                <Text style={styles.statLine}>{t.avgAnti}：<Text style={styles.bold}>{monthlySummary.avg_anti_inflammatory}/10</Text></Text>
               </View>
               {monthlySummary.body_metrics.length > 0 && (
                 <View style={styles.statsCard}>
-                  <Text style={styles.cardTitle}>体征变化</Text>
+                  <Text style={styles.cardTitle}>{t.bodyChange}</Text>
                   {monthlySummary.body_metrics.map((m) => (
-                    <Text key={m.id} style={styles.statLine}>{m.date}：{m.weight}kg · 体脂{m.body_fat_pct}%</Text>
+                    <Text key={m.id} style={styles.statLine}>{m.date}：{m.weight}kg · {t.bodyFat} {m.body_fat_pct}%</Text>
                   ))}
                 </View>
               )}
@@ -210,84 +264,193 @@ export default function TrackingScreen() {
         </View>
       )}
 
-      {/* 浮动添加按钮（仅今日视图） */}
+      {/* 浮动按钮组（仅今日视图） */}
       {tab === "daily" && (
-        <TouchableOpacity style={styles.fab} onPress={() => setShowAddModal(true)}>
-          <Text style={styles.fabText}>+</Text>
-        </TouchableOpacity>
+        <View style={styles.fabGroup}>
+          <TouchableOpacity style={[styles.fab, { backgroundColor: "#3b82f6", marginBottom: 12 }]} onPress={() => setShowExerciseModal(true)}>
+            <Text style={styles.fabText}>🏃</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.fab} onPress={() => setShowAddModal(true)}>
+            <Text style={styles.fabText}>+</Text>
+          </TouchableOpacity>
+        </View>
       )}
+
+      {/* 运动记录弹窗 */}
+      <Modal visible={showExerciseModal} transparent animationType="slide">
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+          <View style={styles.modalOverlay}>
+            <ScrollView style={styles.modalBox} contentContainerStyle={{ paddingBottom: 20 }} keyboardShouldPersistTaps="handled">
+              <Text style={styles.modalTitle}>{te.title}</Text>
+              <View style={styles.mealTypeRow}>
+                {(["cardio", "strength"] as const).map(type => (
+                  <TouchableOpacity key={type}
+                    style={[styles.mealTypeBtn, exerciseType === type && styles.mealTypeBtnActive]}
+                    onPress={() => setExerciseType(type)}>
+                    <Text style={[styles.mealTypeTxt, exerciseType === type && styles.mealTypeTxtActive]}>
+                      {type === "cardio" ? te.cardio : te.strength}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              {exerciseType === "cardio" ? (
+                <>
+                  <Text style={styles.label}>{te.activity}</Text>
+                  <View style={styles.mealTypeRow}>
+                    {(["walking", "running", "cycling", "swimming"] as const).map(a => (
+                      <TouchableOpacity key={a}
+                        style={[styles.mealTypeBtn, exerciseActivity === a && styles.mealTypeBtnActive]}
+                        onPress={() => setExerciseActivity(a)}>
+                        <Text style={[styles.mealTypeTxt, exerciseActivity === a && styles.mealTypeTxtActive]}>
+                          {te[a]}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <TextInput style={styles.input} placeholder={te.duration} value={exerciseDuration}
+                    onChangeText={setExerciseDuration} keyboardType="numeric" returnKeyType="done" onSubmitEditing={Keyboard.dismiss} />
+                  <Text style={styles.label}>{te.intensity}</Text>
+                  <View style={styles.mealTypeRow}>
+                    {(["low", "moderate", "high"] as const).map(i => (
+                      <TouchableOpacity key={i}
+                        style={[styles.mealTypeBtn, exerciseIntensity === i && styles.mealTypeBtnActive]}
+                        onPress={() => setExerciseIntensity(i)}>
+                        <Text style={[styles.mealTypeTxt, exerciseIntensity === i && styles.mealTypeTxtActive]}>
+                          {te[i]}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </>
+              ) : (
+                <>
+                  <Text style={styles.label}>{te.activity}</Text>
+                  <View style={styles.mealTypeRow}>
+                    {(["squat", "bench", "deadlift", "pullup"] as const).map(key => (
+                      <TouchableOpacity key={key}
+                        style={[styles.mealTypeBtn, strengthExercise === key && styles.mealTypeBtnActive]}
+                        onPress={() => setStrengthExercise(key)}>
+                        <Text style={[styles.mealTypeTxt, strengthExercise === key && styles.mealTypeTxtActive]}>{te[key]}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  <View style={styles.mealTypeRow}>
+                    {(["shoulder", "row", "lunge", "curl", "custom"] as const).map(key => (
+                      <TouchableOpacity key={key}
+                        style={[styles.mealTypeBtn, strengthExercise === key && styles.mealTypeBtnActive]}
+                        onPress={() => setStrengthExercise(key)}>
+                        <Text style={[styles.mealTypeTxt, strengthExercise === key && styles.mealTypeTxtActive]}>{te[key]}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  {strengthExercise === "custom" && (
+                    <TextInput style={styles.input} placeholder={te.customPlaceholder} value={customExercise}
+                      onChangeText={setCustomExercise} returnKeyType="done" onSubmitEditing={Keyboard.dismiss} />
+                  )}
+                  <View style={{ flexDirection: "row", gap: 8 }}>
+                    <TextInput style={[styles.input, { flex: 1 }]} placeholder={te.sets} value={exerciseSets}
+                      onChangeText={setExerciseSets} keyboardType="numeric" returnKeyType="next" />
+                    <TextInput style={[styles.input, { flex: 1 }]} placeholder={te.reps} value={exerciseReps}
+                      onChangeText={setExerciseReps} keyboardType="numeric" returnKeyType="next" />
+                    <TextInput style={[styles.input, { flex: 1 }]} placeholder={te.weightKg} value={exerciseWeight}
+                      onChangeText={setExerciseWeight} keyboardType="numeric" returnKeyType="done" onSubmitEditing={Keyboard.dismiss} />
+                  </View>
+                </>
+              )}
+              <TouchableOpacity style={styles.addBtn} onPress={handleLogExercise}>
+                <Text style={styles.addBtnText}>{te.log}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.addBtn, { backgroundColor: "#9ca3af", marginTop: 8 }]}
+                onPress={() => { Keyboard.dismiss(); setShowExerciseModal(false) }}>
+                <Text style={styles.addBtnText}>{i18n.common.cancel}</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
 
       {/* 添加饮食弹窗 */}
       <Modal visible={showAddModal} transparent animationType="slide">
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalBox}>
-            <Text style={styles.modalTitle}>{t.addMeal}</Text>
-            <Text style={styles.label}>{t.mealType}</Text>
-            <View style={styles.mealTypeRow}>
-              {["breakfast", "lunch", "dinner", "snack"].map((type) => (
-                <TouchableOpacity key={type}
-                  style={[styles.mealTypeBtn, mealType === type && styles.mealTypeBtnActive]}
-                  onPress={() => setMealType(type)}>
-                  <Text style={[styles.mealTypeTxt, mealType === type && styles.mealTypeTxtActive]}>
-                    {mealLabel(type)}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <TextInput style={styles.input} placeholder={t.foodName} value={foodName} onChangeText={setFoodName} />
-            <TextInput style={styles.input} placeholder={t.calories} value={calories} onChangeText={setCalories} keyboardType="numeric" />
-            <TextInput style={styles.input} placeholder={t.protein} value={protein} onChangeText={setProtein} keyboardType="numeric" />
-            <TextInput style={styles.input} placeholder={t.fiber} value={fiber} onChangeText={setFiber} keyboardType="numeric" />
-            <TouchableOpacity style={styles.addBtn} onPress={handleAddManual}>
-              <Text style={styles.addBtnText}>{t.addManual}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.addBtn, { backgroundColor: "#3b82f6", marginTop: 8 }]} onPress={handlePhoto}>
-              <Text style={styles.addBtnText}>{t.addPhoto}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.addBtn, { backgroundColor: "#9ca3af", marginTop: 8 }]} onPress={() => setShowAddModal(false)}>
-              <Text style={styles.addBtnText}>{zh.common.cancel}</Text>
-            </TouchableOpacity>
+        <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+          <View style={styles.modalOverlay}>
+            <ScrollView style={styles.modalBox} contentContainerStyle={{ paddingBottom: 24 }} keyboardShouldPersistTaps="handled">
+              <Text style={styles.modalTitle}>{t.addMeal}</Text>
+              <Text style={styles.label}>{t.mealType}</Text>
+              <View style={styles.mealTypeRow}>
+                {["breakfast", "lunch", "dinner", "snack"].map((type) => (
+                  <TouchableOpacity key={type}
+                    style={[styles.mealTypeBtn, mealType === type && styles.mealTypeBtnActive]}
+                    onPress={() => setMealType(type)}>
+                    <Text style={[styles.mealTypeTxt, mealType === type && styles.mealTypeTxtActive]}>
+                      {mealLabel(type)}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <Text style={styles.label}>{t.foodName}</Text>
+              <TextInput style={styles.input} placeholder={t.foodName} value={foodName} onChangeText={setFoodName} returnKeyType="next" />
+              <Text style={styles.label}>{t.calories}</Text>
+              <TextInput style={styles.input} placeholder={t.calories} value={calories} onChangeText={setCalories} keyboardType="numeric" returnKeyType="next" />
+              <Text style={styles.label}>{t.protein}</Text>
+              <TextInput style={styles.input} placeholder={t.protein} value={protein} onChangeText={setProtein} keyboardType="numeric" returnKeyType="next" />
+              <Text style={styles.label}>{t.fiber}</Text>
+              <TextInput style={styles.input} placeholder={t.fiber} value={fiber} onChangeText={setFiber} keyboardType="numeric" returnKeyType="done" onSubmitEditing={Keyboard.dismiss} />
+              <TouchableOpacity style={[styles.addBtn, { marginTop: 8 }]} onPress={handleAddManual}>
+                <Text style={styles.addBtnText}>{t.addManual}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.addBtn, { backgroundColor: "#3b82f6", marginTop: 8 }]} onPress={handlePhoto}>
+                <Text style={styles.addBtnText}>{t.addPhoto}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.addBtn, { backgroundColor: "#9ca3af", marginTop: 8 }]}
+                onPress={() => { Keyboard.dismiss(); setShowAddModal(false) }}>
+                <Text style={styles.addBtnText}>{i18n.common.cancel}</Text>
+              </TouchableOpacity>
+            </ScrollView>
           </View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   )
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  tabRow: { flexDirection: "row", backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#e5e7eb" },
-  tabBtn: { flex: 1, paddingVertical: 12, alignItems: "center" },
-  tabBtnActive: { borderBottomWidth: 2, borderBottomColor: "#22c55e" },
+  container: { flex: 1, backgroundColor: "#f2f7f2" },
+  tabRow: { flexDirection: "row", backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#e8f0e8" },
+  tabBtn: { flex: 1, paddingVertical: 14, alignItems: "center" },
+  tabBtnActive: { borderBottomWidth: 2, borderBottomColor: "#16a34a" },
   tabText: { fontSize: 14, color: "#9ca3af" },
-  tabTextActive: { color: "#22c55e", fontWeight: "600" },
+  tabTextActive: { color: "#16a34a", fontWeight: "600" },
   content: { padding: 16, paddingBottom: 80 },
-  statsCard: { backgroundColor: "#fff", borderRadius: 12, padding: 16, marginBottom: 12 },
-  cardTitle: { fontSize: 16, fontWeight: "bold", marginBottom: 10, color: "#111827" },
-  statLine: { fontSize: 14, color: "#374151", marginBottom: 4 },
-  bold: { fontWeight: "bold" },
+  statsCard: { backgroundColor: "#fff", borderRadius: 16, padding: 20, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
+  cardTitle: { fontSize: 17, fontWeight: "600", marginBottom: 12, color: "#1a1a1a" },
+  statLine: { fontSize: 15, color: "#1a1a1a", marginBottom: 6 },
+  bold: { fontWeight: "700" },
   empty: { textAlign: "center", color: "#9ca3af", marginTop: 40, fontSize: 15 },
-  logCard: { backgroundColor: "#fff", borderRadius: 10, padding: 14, marginBottom: 8 },
-  mealLabel: { fontSize: 13, color: "#22c55e", fontWeight: "600", marginBottom: 6 },
-  foodItem: { fontSize: 14, color: "#374151", marginBottom: 2 },
+  logCard: { backgroundColor: "#f2f7f2", borderRadius: 12, padding: 14, marginBottom: 4 },
+  mealGroup: { marginBottom: 14 },
+  mealGroupHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
+  mealGroupTotal: { fontSize: 15, fontWeight: "700", color: "#16a34a" },
+  mealLabel: { fontSize: 14, color: "#16a34a", fontWeight: "600", marginBottom: 6 },
+  foodItem: { fontSize: 14, color: "#1a1a1a", marginBottom: 2 },
   logTotal: { fontSize: 13, color: "#6b7280", marginTop: 6, fontStyle: "italic" },
-  dayRow: { flexDirection: "row", alignItems: "center", marginBottom: 6 },
-  dayLabel: { width: 40, fontSize: 12, color: "#6b7280" },
-  dayValue: { width: 40, fontSize: 12, color: "#374151", textAlign: "right" },
+  dayRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
+  dayLabel: { width: 40, fontSize: 13, color: "#6b7280" },
+  dayValue: { width: 40, fontSize: 13, color: "#1a1a1a", textAlign: "right" },
   overlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" },
   overlayText: { color: "#fff", marginTop: 12, fontSize: 15 },
-  fab: { position: "absolute", bottom: 24, right: 24, width: 56, height: 56, borderRadius: 28, backgroundColor: "#22c55e", justifyContent: "center", alignItems: "center", elevation: 4 },
+  fab: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#16a34a", justifyContent: "center", alignItems: "center", shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 8, elevation: 6 },
+  fabGroup: { position: "absolute", bottom: 24, right: 24, alignItems: "center" },
   fabText: { color: "#fff", fontSize: 28, lineHeight: 32 },
   modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
-  modalBox: { backgroundColor: "#fff", borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
-  modalTitle: { fontSize: 18, fontWeight: "bold", marginBottom: 16 },
-  label: { fontSize: 13, color: "#6b7280", marginBottom: 6 },
-  mealTypeRow: { flexDirection: "row", gap: 8, marginBottom: 14 },
-  mealTypeBtn: { flex: 1, paddingVertical: 8, borderRadius: 8, borderWidth: 1, borderColor: "#e5e7eb", alignItems: "center" },
-  mealTypeBtnActive: { backgroundColor: "#22c55e", borderColor: "#22c55e" },
-  mealTypeTxt: { fontSize: 13, color: "#374151" },
+  modalBox: { backgroundColor: "#fff", borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24 },
+  modalTitle: { fontSize: 20, fontWeight: "700", marginBottom: 20, color: "#1a1a1a" },
+  label: { fontSize: 13, color: "#6b7280", marginBottom: 8 },
+  mealTypeRow: { flexDirection: "row", gap: 8, marginBottom: 16, flexWrap: "wrap" },
+  mealTypeBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: "#e8f0e8", alignItems: "center", minWidth: 70 },
+  mealTypeBtnActive: { backgroundColor: "#16a34a", borderColor: "#16a34a" },
+  mealTypeTxt: { fontSize: 14, color: "#1a1a1a" },
   mealTypeTxtActive: { color: "#fff", fontWeight: "600" },
-  input: { borderWidth: 1, borderColor: "#e5e7eb", borderRadius: 8, padding: 10, marginBottom: 10, fontSize: 15 },
-  addBtn: { backgroundColor: "#22c55e", borderRadius: 8, padding: 12, alignItems: "center" },
-  addBtnText: { color: "#fff", fontSize: 15, fontWeight: "600" },
+  input: { borderWidth: 1, borderColor: "#e8f0e8", borderRadius: 12, padding: 14, marginBottom: 12, fontSize: 15, backgroundColor: "#fff" },
+  addBtn: { backgroundColor: "#16a34a", borderRadius: 14, padding: 16, alignItems: "center" },
+  addBtnText: { color: "#fff", fontSize: 17, fontWeight: "600" },
 })

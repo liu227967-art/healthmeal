@@ -1,15 +1,16 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import {
   View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, Alert, ActivityIndicator
+  StyleSheet, Alert, ActivityIndicator, TextInput, Platform
 } from "react-native"
+import * as ImagePicker from "expo-image-picker"
 import { Picker } from "@react-native-picker/picker"
-import { generateMealPlan, MealPlanData, MealItem } from "../../services/meal"
-import { zh } from "../../i18n/zh"
-
-const t = zh.meal
+import { generateMealPlan, identifyIngredientsFromPhoto, getIngredients, MealPlanData, MealItem } from "../../services/meal"
+import { useTranslation } from "../../hooks/useTranslation"
 
 function MealCard({ label, meal }: { label: string; meal: MealItem }) {
+  const { t: i18n } = useTranslation()
+  const t = i18n.meal
   return (
     <View style={styles.card}>
       <Text style={styles.cardLabel}>{label}</Text>
@@ -37,42 +38,195 @@ function MealCard({ label, meal }: { label: string; meal: MealItem }) {
   )
 }
 
+function IngredientTag({ name, onRemove }: { name: string; onRemove: () => void }) {
+  return (
+    <View style={styles.tag}>
+      <Text style={styles.tagText}>{name}</Text>
+      <TouchableOpacity onPress={onRemove} style={styles.tagRemove}>
+        <Text style={styles.tagRemoveText}>×</Text>
+      </TouchableOpacity>
+    </View>
+  )
+}
+
 export default function MealScreen() {
+  const { t: i18n, language } = useTranslation()
+  const t = i18n.meal
   const [style, setStyle] = useState("chinese")
   const [range, setRange] = useState("daily")
   const [plan, setPlan] = useState<MealPlanData | null>(null)
   const [generating, setGenerating] = useState(false)
+  const [inputText, setInputText] = useState("")
+  const [ingredients, setIngredients] = useState<string[]>([])
+  const [savedIngredients, setSavedIngredients] = useState<string[]>([])
+  const [recognizing, setRecognizing] = useState(false)
+  const [baseDate, setBaseDate] = useState(new Date())
+
+  // 自动从今日食材读取
+  useEffect(() => {
+    const today = new Date().toISOString().split("T")[0]
+    getIngredients(today).then((data) => {
+      const names = data.map(i => `${i.name} ${i.quantity}${i.unit}`)
+      setSavedIngredients(names)
+    }).catch(() => {})
+  }, [])
+
+  // 根据 range 显示当前选中的日期描述
+  function getDateLabel() {
+    const d = new Date(baseDate)
+    if (range === "daily") {
+      return language === "zh"
+        ? `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日`
+        : `${d.toLocaleString("en", { month: "short" })} ${d.getDate()}, ${d.getFullYear()}`
+    } else if (range === "weekly") {
+      const day = d.getDay()
+      const mon = new Date(d); mon.setDate(d.getDate() - ((day + 6) % 7))
+      const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
+      return `${mon.getMonth() + 1}/${mon.getDate()} — ${sun.getMonth() + 1}/${sun.getDate()}`
+    } else {
+      return `${d.getFullYear()}年${d.getMonth() + 1}月`
+    }
+  }
+
+  function shiftDate(dir: 1 | -1) {
+    const d = new Date(baseDate)
+    if (range === "daily") d.setDate(d.getDate() + dir)
+    else if (range === "weekly") d.setDate(d.getDate() + dir * 7)
+    else d.setMonth(d.getMonth() + dir)
+    setBaseDate(d)
+  }
+
+  function getDateParam() {
+    return baseDate.toISOString().split("T")[0]
+  }
+
+  function handleAddIngredient() {
+    const trimmed = inputText.trim()
+    if (!trimmed) return
+    const items = trimmed.split(/[,，、]/).map(s => s.trim()).filter(Boolean)
+    const newList = [...ingredients]
+    items.forEach(item => {
+      if (!newList.includes(item)) newList.push(item)
+    })
+    setIngredients(newList)
+    setInputText("")
+  }
+
+  function handleRemoveIngredient(name: string) {
+    setIngredients(prev => prev.filter(i => i !== name))
+  }
+
+  async function handlePhotoRecognize() {
+    const perm = await ImagePicker.requestCameraPermissionsAsync()
+    if (!perm.granted) { Alert.alert("需要相机权限"); return }
+    const result = await ImagePicker.launchCameraAsync({ base64: true, quality: 0.7 })
+    if (result.canceled || !result.assets?.[0]?.base64) return
+    setRecognizing(true)
+    try {
+      const identified = await identifyIngredientsFromPhoto(result.assets[0].base64)
+      const newList = [...ingredients]
+      identified.forEach((item: { name: string }) => {
+        if (!newList.includes(item.name)) newList.push(item.name)
+      })
+      setIngredients(newList)
+    } catch {
+      Alert.alert(i18n.common.error, "识别失败，请重试")
+    } finally {
+      setRecognizing(false)
+    }
+  }
 
   async function handleGenerate() {
     setGenerating(true)
     setPlan(null)
     try {
-      const result = await generateMealPlan(style, range)
+      const allIngredients = [...savedIngredients, ...ingredients]
+      const result = await generateMealPlan(style, range, allIngredients.length > 0 ? allIngredients : undefined, getDateParam(), language)
       setPlan(result)
     } catch {
-      Alert.alert(zh.common.error, "生成失败，请检查网络或稍后重试")
+      Alert.alert(i18n.common.error, "生成失败，请检查网络或稍后重试")
     } finally {
       setGenerating(false)
     }
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}>
       <Text style={styles.title}>{t.title}</Text>
 
       <Text style={styles.label}>{t.style}</Text>
-      <Picker selectedValue={style} onValueChange={setStyle}>
+      <View style={styles.styleGrid}>
         {Object.entries(t.styles).map(([key, label]) => (
-          <Picker.Item key={key} label={label} value={key} />
+          <TouchableOpacity
+            key={key}
+            style={[styles.styleBtn, style === key && styles.styleBtnActive]}
+            onPress={() => setStyle(key)}
+          >
+            <Text style={[styles.styleBtnText, style === key && styles.styleBtnTextActive]}>{label}</Text>
+          </TouchableOpacity>
         ))}
-      </Picker>
+      </View>
 
       <Text style={styles.label}>{t.range}</Text>
-      <Picker selectedValue={range} onValueChange={setRange}>
+      <Picker selectedValue={range} onValueChange={(v) => { setRange(v); setBaseDate(new Date()) }}>
         {Object.entries(t.ranges).map(([key, label]) => (
           <Picker.Item key={key} label={label} value={key} />
         ))}
       </Picker>
+
+      {/* 日期导航 */}
+      <View style={styles.dateNav}>
+        <TouchableOpacity style={styles.dateArrow} onPress={() => shiftDate(-1)}>
+          <Text style={styles.dateArrowText}>‹</Text>
+        </TouchableOpacity>
+        <Text style={styles.dateLabel}>{getDateLabel()}</Text>
+        <TouchableOpacity style={styles.dateArrow} onPress={() => shiftDate(1)}>
+          <Text style={styles.dateArrowText}>›</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* 食材区 */}
+      {savedIngredients.length > 0 && (
+        <View style={styles.savedIngredientsBox}>
+          <Text style={styles.label}>{t.todayIngredients}</Text>
+          <View style={styles.tagRow}>
+            {savedIngredients.map(name => (
+              <View key={name} style={styles.tag}>
+                <Text style={styles.tagText}>{name}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
+
+      <Text style={styles.label}>{t.extraIngredients}</Text>
+      <Text style={styles.hint}>{t.ingredientHint}</Text>
+      <View style={styles.inputRow}>
+        <TextInput
+          style={styles.ingredientInput}
+          placeholder={t.ingredientPlaceholder}
+          value={inputText}
+          onChangeText={setInputText}
+          onSubmitEditing={handleAddIngredient}
+          returnKeyType="done"
+        />
+        <TouchableOpacity style={styles.addBtn} onPress={handleAddIngredient}>
+          <Text style={styles.addBtnText}>{t.addBtn}</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.photoBtn} onPress={handlePhotoRecognize} disabled={recognizing}>
+          {recognizing
+            ? <ActivityIndicator size="small" color="#fff" />
+            : <Text style={styles.addBtnText}>📷</Text>
+          }
+        </TouchableOpacity>
+      </View>
+      {ingredients.length > 0 && (
+        <View style={styles.tagRow}>
+          {ingredients.map(name => (
+            <IngredientTag key={name} name={name} onRemove={() => handleRemoveIngredient(name)} />
+          ))}
+        </View>
+      )}
 
       <TouchableOpacity
         style={[styles.genButton, generating && styles.genButtonDisabled]}
@@ -103,7 +257,7 @@ export default function MealScreen() {
 
           {plan.content.summary && (
             <View style={styles.summary}>
-              <Text style={styles.summaryTitle}>每日汇总</Text>
+              <Text style={styles.summaryTitle}>{t.dailySummary}</Text>
               <Text style={styles.summaryLine}>{t.totalCalories}：{plan.content.summary.total_calories} kcal</Text>
               <Text style={styles.summaryLine}>{t.protein}：{plan.content.summary.protein}g</Text>
               <Text style={styles.summaryLine}>{t.fiber}：{plan.content.summary.fiber}g</Text>
@@ -122,22 +276,42 @@ const styles = StyleSheet.create({
   content: { padding: 16, paddingBottom: 40 },
   title: { fontSize: 22, fontWeight: "bold", marginBottom: 16 },
   label: { fontSize: 14, color: "#666", marginBottom: 4, marginTop: 8 },
-  genButton: { backgroundColor: "#22c55e", borderRadius: 8, padding: 14, alignItems: "center", marginTop: 16, marginBottom: 8 },
+  hint: { fontSize: 12, color: "#9ca3af", marginBottom: 8 },
+  inputRow: { flexDirection: "row", gap: 8, marginBottom: 8 },
+  ingredientInput: { flex: 1, borderWidth: 1, borderColor: "#e8f0e8", borderRadius: 12, padding: 10, fontSize: 14 },
+  addBtn: { backgroundColor: "#16a34a", borderRadius: 14, paddingHorizontal: 14, justifyContent: "center" },
+  photoBtn: { backgroundColor: "#3b82f6", borderRadius: 14, paddingHorizontal: 14, justifyContent: "center" },
+  addBtnText: { color: "#fff", fontSize: 14, fontWeight: "600" },
+  dateNav: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", backgroundColor: "#f2f7f2", borderRadius: 12, paddingVertical: 8, paddingHorizontal: 12, marginBottom: 8 },
+  dateArrow: { padding: 6 },
+  dateArrowText: { fontSize: 24, color: "#16a34a", fontWeight: "bold" },
+  dateLabel: { fontSize: 15, fontWeight: "600", color: "#1a1a1a" },
+  savedIngredientsBox: { marginBottom: 8 },
+  tag: { flexDirection: "row", alignItems: "center", backgroundColor: "#f0fdf4", borderRadius: 16, paddingVertical: 4, paddingHorizontal: 10, borderWidth: 1, borderColor: "#86efac" },
+  tagText: { fontSize: 13, color: "#166534", marginRight: 4 },
+  tagRemove: { paddingLeft: 2 },
+  tagRemoveText: { fontSize: 16, color: "#6b7280", lineHeight: 18 },
+  styleGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
+  styleBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: "#e8f0e8", backgroundColor: "#f2f7f2" },
+  styleBtnActive: { backgroundColor: "#16a34a", borderColor: "#16a34a" },
+  styleBtnText: { fontSize: 13, color: "#1a1a1a" },
+  styleBtnTextActive: { color: "#fff", fontWeight: "600" },
   genButtonDisabled: { backgroundColor: "#86efac" },
+  genButton: { backgroundColor: "#16a34a", borderRadius: 14, padding: 16, alignItems: "center", marginVertical: 12 },
   genButtonText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  generatingText: { textAlign: "center", color: "#666", fontSize: 14, marginBottom: 16 },
+  generatingText: { textAlign: "center", color: "#6b7280", fontSize: 14, marginBottom: 16 },
   result: { marginTop: 16 },
-  card: { backgroundColor: "#f9fafb", borderRadius: 12, padding: 16, marginBottom: 12 },
-  cardLabel: { fontSize: 12, color: "#22c55e", fontWeight: "600", marginBottom: 4 },
-  cardName: { fontSize: 18, fontWeight: "bold", marginBottom: 8 },
+  card: { backgroundColor: "#fff", borderRadius: 16, padding: 20, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
+  cardLabel: { fontSize: 12, color: "#16a34a", fontWeight: "600", marginBottom: 4 },
+  cardName: { fontSize: 18, fontWeight: "bold", color: "#1a1a1a", marginBottom: 8 },
   statsRow: { flexDirection: "row", gap: 12, marginBottom: 8 },
-  stat: { fontSize: 13, color: "#555" },
+  stat: { fontSize: 13, color: "#6b7280" },
   organs: { fontSize: 13, color: "#7c3aed", marginBottom: 6 },
-  ingredientsList: { fontSize: 12, color: "#888", marginBottom: 8 },
+  ingredientsList: { fontSize: 12, color: "#6b7280", marginBottom: 8 },
   steps: { marginTop: 4 },
-  stepsLabel: { fontSize: 13, fontWeight: "600", color: "#374151", marginBottom: 4 },
-  step: { fontSize: 13, color: "#555", lineHeight: 20 },
-  summary: { backgroundColor: "#f0fdf4", borderRadius: 12, padding: 16, marginTop: 8 },
+  stepsLabel: { fontSize: 13, fontWeight: "600", color: "#1a1a1a", marginBottom: 4 },
+  step: { fontSize: 13, color: "#6b7280", lineHeight: 20 },
+  summary: { backgroundColor: "#f0fdf4", borderRadius: 16, padding: 20, marginTop: 8 },
   summaryTitle: { fontSize: 16, fontWeight: "bold", color: "#166534", marginBottom: 8 },
   summaryLine: { fontSize: 14, color: "#166534", marginBottom: 4 },
   summaryNotes: { fontSize: 14, color: "#166534", marginTop: 8, fontStyle: "italic" },

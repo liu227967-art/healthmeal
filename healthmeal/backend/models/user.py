@@ -36,6 +36,7 @@ class Profile(Base):
     age = Column(Integer)
     gender = Column(String)          # male/female/other
     goal = Column(String)            # reduce_fat/maintain/gain_muscle
+    activity_level = Column(String, default="light")  # sedentary/light/moderate/active/very_active
     allergies = Column(Text, default="[]")  # JSON array of strings
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
 

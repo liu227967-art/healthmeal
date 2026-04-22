@@ -7,6 +7,7 @@ export interface ProfileData {
   age?: number
   gender?: string
   goal?: string
+  activity_level?: string
   allergies?: string[]
   tdee?: number
 }
