@@ -79,7 +79,7 @@ export default function TrackingScreen() {
 
   async function handleAddManual() {
     if (!foodName.trim()) { Alert.alert("请输入食物名称"); return }
-    if (!calories) { Alert.alert("请输入热量"); return }
+    // 热量可选，未填时默认 0
     try {
       await addFoodLog({
         meal_type: mealType,
