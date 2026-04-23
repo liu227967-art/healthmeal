@@ -71,7 +71,11 @@
       "Bash(python -m pytest tests/test_tracking_models.py -v)",
       "Bash(python -m pytest tests/test_claude_service.py::test_analyze_food_photo_returns_nutrition -v)",
       "Bash(python -m pytest tests/test_claude_service.py -v)",
-      "Bash(python -m pytest tests/test_tracking.py -v)"
+      "Bash(python -m pytest tests/test_tracking.py -v)",
+      "Bash(git push:*)",
+      "Bash(xattr -l /Users/liuying/Desktop/lilyproject/healthmeal/backend/requirements.txt)",
+      "Bash(xattr -d com.apple.quarantine /Users/liuying/Desktop/lilyproject/healthmeal/frontend/services/api.ts)",
+      "Bash(xattr -c /Users/liuying/Desktop/lilyproject/healthmeal/frontend/services/api.ts)"
     ]
   }
 }
