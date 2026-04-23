@@ -72,7 +72,7 @@ export default function IngredientsScreen() {
       await identifyIngredientsFromPhoto(result.assets[0].base64, language)
       await load()
     } catch {
-      Alert.alert(zh.common.error, "识别失败，请重试")
+      Alert.alert(i18n.common.error, "识别失败，请重试")
     } finally {
       setLoading(false)
     }
@@ -83,7 +83,7 @@ export default function IngredientsScreen() {
       await deleteIngredient(id)
       await load()
     } catch {
-      Alert.alert(zh.common.error)
+      Alert.alert(i18n.common.error)
     }
   }
 
