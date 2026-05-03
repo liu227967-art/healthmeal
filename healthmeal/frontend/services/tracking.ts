@@ -60,6 +60,18 @@ export interface MonthlySummary {
   total_days_logged: number
 }
 
+export interface NutritionEstimate {
+  calories: number
+  protein: number
+  fiber: number
+  anti_inflammatory: number
+}
+
+export async function estimateNutrition(name: string, quantity: number, unit: string): Promise<NutritionEstimate> {
+  const res = await api.post("/food-logs/estimate", { name, quantity, unit })
+  return res.data
+}
+
 export async function addFoodLog(data: {
   meal_type: string
   input_method: string

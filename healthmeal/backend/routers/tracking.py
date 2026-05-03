@@ -10,7 +10,8 @@ from models.tracking import FoodLog, BodyMetric
 from schemas.tracking import (
     FoodLogRequest, FoodLogPhotoRequest, FoodLogResponse,
     BodyMetricRequest, BodyMetricResponse,
-    DailyHealthSummary, WeeklyHealthSummary, MonthlyHealthSummary
+    DailyHealthSummary, WeeklyHealthSummary, MonthlyHealthSummary,
+    NutritionEstimateRequest, NutritionEstimateResponse
 )
 from dependencies import get_current_user
 from services.quota_service import check_quota, increment_quota
@@ -31,6 +32,21 @@ def _build_food_log_response(log: FoodLog) -> FoodLogResponse:
         total_fiber=log.total_fiber,
         anti_inflammatory_score=log.anti_inflammatory_score,
         logged_at=log.logged_at
+    )
+
+
+@router.post("/food-logs/estimate", response_model=NutritionEstimateResponse)
+def estimate_food_nutrition(body: NutritionEstimateRequest,
+                             current_user: User = Depends(get_current_user)):
+    if not body.name.strip():
+        raise HTTPException(status_code=400, detail="name is required")
+    from services.claude_service import estimate_nutrition
+    result = estimate_nutrition(body.name, body.quantity, body.unit)
+    return NutritionEstimateResponse(
+        calories=result.get("calories", 0),
+        protein=result.get("protein", 0),
+        fiber=result.get("fiber", 0),
+        anti_inflammatory=result.get("anti_inflammatory", 5),
     )
 
 

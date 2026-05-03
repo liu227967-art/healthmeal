@@ -133,7 +133,7 @@ export default function KnowledgeScreen() {
         c.id === id ? { ...c, is_bookmarked: !isBookmarked } : c
       ))
     } catch {
-      Alert.alert(zh.common.error)
+      Alert.alert(i18n.common.error)
     }
   }
 
@@ -143,21 +143,24 @@ export default function KnowledgeScreen() {
       const result = await generateMealFromContent(id)
       const summary = (result.meal_plan as any)?.summary
       Alert.alert(
-        `基于《${result.based_on}》`,
+        t.generateMealSuccess.replace("{title}", result.based_on),
         summary
-          ? `今日热量：${summary.total_calories}kcal\n蛋白质：${summary.protein}g\n${summary.health_notes}`
-          : "餐谱已生成，请前往「餐谱」Tab 查看历史记录"
+          ? t.generateMealSummary
+              .replace("{calories}", String(summary.total_calories))
+              .replace("{protein}", String(summary.protein))
+              .replace("{notes}", summary.health_notes)
+          : t.generateMealDone
       )
     } catch {
-      Alert.alert(zh.common.error, "生成失败，请稍后重试")
+      Alert.alert(i18n.common.error, t.generateMealFail)
     } finally {
       setGeneratingId(null)
     }
   }
 
   async function handleSaveNote() {
-    if (!noteTitle.trim()) { Alert.alert("请输入标题"); return }
-    if (!noteContent.trim()) { Alert.alert("请输入内容"); return }
+    if (!noteTitle.trim()) { Alert.alert(t.noteTitleRequired); return }
+    if (!noteContent.trim()) { Alert.alert(t.noteContentRequired); return }
     setSavingNote(true)
     try {
       await createNote({ title: noteTitle.trim(), content: noteContent.trim(), lang: noteLang, tags: [] })
@@ -179,7 +182,7 @@ export default function KnowledgeScreen() {
           await deleteNote(id)
           await loadData()
         } catch {
-          Alert.alert(zh.common.error)
+          Alert.alert(i18n.common.error)
         }
       }}
     ])

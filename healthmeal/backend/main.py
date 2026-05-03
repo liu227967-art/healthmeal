@@ -3,15 +3,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import auth, profile, exercise, admin, meal, tracking, knowledge, social
 from database import engine, Base
 import models.user, models.meal, models.tracking, models.knowledge, models.social
+import os
 
 # 启动时自动建表
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="HealthMeal API", version="1.0.0")
 
+_raw_origins = os.getenv("ALLOWED_ORIGINS", "")
+allowed_origins = [o.strip() for o in _raw_origins.split(",") if o.strip()] or ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

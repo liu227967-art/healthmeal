@@ -17,6 +17,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   language: "zh",
   setAuth: async (token, role, language = "zh") => {
     await AsyncStorage.setItem("token", token)
+    await AsyncStorage.setItem("role", role)
     await AsyncStorage.setItem("language", language)
     set({ token, role, language })
   },
@@ -30,8 +31,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   loadFromStorage: async () => {
     const token = await AsyncStorage.getItem("token")
+    const role = await AsyncStorage.getItem("role")
     const language = await AsyncStorage.getItem("language") || "zh"
-    if (token) set({ token, language })
+    if (token) set({ token, role, language })
     else set({ language })
   },
 }))

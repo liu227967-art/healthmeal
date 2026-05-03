@@ -84,7 +84,9 @@ export default function MealScreen() {
       const sun = new Date(mon); sun.setDate(mon.getDate() + 6)
       return `${mon.getMonth() + 1}/${mon.getDate()} — ${sun.getMonth() + 1}/${sun.getDate()}`
     } else {
-      return `${d.getFullYear()}年${d.getMonth() + 1}月`
+      return t.monthLabel
+        .replace("{year}", String(d.getFullYear()))
+        .replace("{month}", String(d.getMonth() + 1))
     }
   }
 
@@ -118,7 +120,7 @@ export default function MealScreen() {
 
   async function handlePhotoRecognize() {
     const perm = await ImagePicker.requestCameraPermissionsAsync()
-    if (!perm.granted) { Alert.alert("需要相机权限"); return }
+    if (!perm.granted) { Alert.alert(i18n.common.error, t.needCameraPermission); return }
     const result = await ImagePicker.launchCameraAsync({ base64: true, quality: 0.7 })
     if (result.canceled || !result.assets?.[0]?.base64) return
     setRecognizing(true)
@@ -130,7 +132,7 @@ export default function MealScreen() {
       })
       setIngredients(newList)
     } catch {
-      Alert.alert(i18n.common.error, "识别失败，请重试")
+      Alert.alert(i18n.common.error, t.recognizeFail)
     } finally {
       setRecognizing(false)
     }
@@ -144,7 +146,7 @@ export default function MealScreen() {
       const result = await generateMealPlan(style, range, allIngredients.length > 0 ? allIngredients : undefined, getDateParam(), language)
       setPlan(result)
     } catch {
-      Alert.alert(i18n.common.error, "生成失败，请检查网络或稍后重试")
+      Alert.alert(i18n.common.error, t.generateFail)
     } finally {
       setGenerating(false)
     }

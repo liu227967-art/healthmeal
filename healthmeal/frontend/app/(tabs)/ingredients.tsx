@@ -39,7 +39,7 @@ export default function IngredientsScreen() {
 
   async function handleAddManual() {
     if (!name.trim()) {
-      Alert.alert("请输入食材名称")
+      Alert.alert(t.nameRequired)
       return
     }
     try {
@@ -55,14 +55,14 @@ export default function IngredientsScreen() {
       Keyboard.dismiss()
       await load()
     } catch (e: any) {
-      Alert.alert("添加失败", e?.response?.data?.detail || e?.message || "请检查网络连接")
+      Alert.alert(t.addFail, e?.response?.data?.detail || e?.message || i18n.common.error)
     }
   }
 
   async function handlePhoto() {
     const perm = await ImagePicker.requestCameraPermissionsAsync()
     if (!perm.granted) {
-      Alert.alert("需要相机权限")
+      Alert.alert(t.needCameraPermission)
       return
     }
     const result = await ImagePicker.launchCameraAsync({ base64: true, quality: 0.7 })
@@ -72,7 +72,7 @@ export default function IngredientsScreen() {
       await identifyIngredientsFromPhoto(result.assets[0].base64, language)
       await load()
     } catch {
-      Alert.alert(i18n.common.error, "识别失败，请重试")
+      Alert.alert(i18n.common.error, t.recognizeFail)
     } finally {
       setLoading(false)
     }

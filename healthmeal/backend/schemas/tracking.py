@@ -3,6 +3,19 @@ from typing import Optional, List, Any
 from datetime import datetime
 
 
+class NutritionEstimateRequest(BaseModel):
+    name: str
+    quantity: float
+    unit: str
+
+
+class NutritionEstimateResponse(BaseModel):
+    calories: float
+    protein: float
+    fiber: float
+    anti_inflammatory: float
+
+
 class FoodItemInput(BaseModel):
     name: str
     calories: float

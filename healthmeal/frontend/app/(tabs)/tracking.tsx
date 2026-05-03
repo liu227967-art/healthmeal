@@ -4,10 +4,11 @@ import {
   TextInput, StyleSheet, Alert, ActivityIndicator, Modal,
   KeyboardAvoidingView, Platform, Keyboard
 } from "react-native"
+import { Picker } from "@react-native-picker/picker"
 import * as ImagePicker from "expo-image-picker"
 import {
   addFoodLog, addFoodLogFromPhoto, getDailySummary,
-  getWeeklySummary, getMonthlySummary, logExercise,
+  getWeeklySummary, getMonthlySummary, logExercise, estimateNutrition,
   FoodLogData, DailySummary, WeeklySummary, MonthlySummary
 } from "../../services/tracking"
 import { useTranslation } from "../../hooks/useTranslation"
@@ -49,9 +50,12 @@ export default function TrackingScreen() {
   const [exerciseIntensity, setExerciseIntensity] = useState("moderate")
   const [mealType, setMealType] = useState("breakfast")
   const [foodName, setFoodName] = useState("")
+  const [quantity, setQuantity] = useState("100")
+  const [unit, setUnit] = useState("g")
   const [calories, setCalories] = useState("")
   const [protein, setProtein] = useState("")
   const [fiber, setFiber] = useState("")
+  const [estimating, setEstimating] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
 
   const loadData = useCallback(async () => {
@@ -78,8 +82,7 @@ export default function TrackingScreen() {
   useEffect(() => { loadData() }, [loadData])
 
   async function handleAddManual() {
-    if (!foodName.trim()) { Alert.alert("请输入食物名称"); return }
-    // 热量可选，未填时默认 0
+    if (!foodName.trim()) { Alert.alert(t.foodName); return }
     try {
       await addFoodLog({
         meal_type: mealType,
@@ -93,11 +96,27 @@ export default function TrackingScreen() {
           anti_inflammatory: 5
         }]
       })
-      setFoodName(""); setCalories(""); setProtein(""); setFiber("")
+      setFoodName(""); setQuantity("100"); setUnit("g")
+      setCalories(""); setProtein(""); setFiber("")
       setShowAddModal(false)
       await loadData()
     } catch {
       Alert.alert(i18n.common.error)
+    }
+  }
+
+  async function handleAIEstimate() {
+    if (!foodName.trim()) { Alert.alert(t.foodName); return }
+    setEstimating(true)
+    try {
+      const result = await estimateNutrition(foodName.trim(), parseFloat(quantity) || 100, unit)
+      setCalories(String(Math.round(result.calories)))
+      setProtein(String(Math.round(result.protein * 10) / 10))
+      setFiber(String(Math.round(result.fiber * 10) / 10))
+    } catch {
+      Alert.alert(i18n.common.error, t.estimateFail)
+    } finally {
+      setEstimating(false)
     }
   }
 
@@ -131,7 +150,7 @@ export default function TrackingScreen() {
       }
       await loadData()
     } catch {
-      Alert.alert(i18n.common.error, "分析失败，请重试")
+      Alert.alert(i18n.common.error, t.analyzeFail)
     } finally {
       setAnalyzing(false)
     }
@@ -389,6 +408,35 @@ export default function TrackingScreen() {
               </View>
               <Text style={styles.label}>{t.foodName}</Text>
               <TextInput style={styles.input} placeholder={t.foodName} value={foodName} onChangeText={setFoodName} returnKeyType="next" />
+              <Text style={styles.label}>{t.quantity}</Text>
+              <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
+                <TextInput
+                  style={[styles.input, { flex: 2, marginBottom: 0 }]}
+                  placeholder={t.quantity}
+                  value={quantity}
+                  onChangeText={setQuantity}
+                  keyboardType="numeric"
+                  returnKeyType="next"
+                />
+                <View style={[styles.input, { flex: 1, marginBottom: 0, padding: 0, justifyContent: "center" }]}>
+                  <Picker selectedValue={unit} onValueChange={setUnit} style={{ height: 48 }}>
+                    <Picker.Item label="g" value="g" />
+                    <Picker.Item label="ml" value="ml" />
+                    <Picker.Item label={i18n.ingredients.units.piece} value="个" />
+                    <Picker.Item label={i18n.ingredients.units.slice} value="片" />
+                  </Picker>
+                </View>
+              </View>
+              <TouchableOpacity
+                style={[styles.addBtn, { backgroundColor: "#8b5cf6", marginBottom: 12 }, estimating && { backgroundColor: "#c4b5fd" }]}
+                onPress={handleAIEstimate}
+                disabled={estimating}
+              >
+                {estimating
+                  ? <ActivityIndicator color="#fff" />
+                  : <Text style={styles.addBtnText}>{t.aiEstimate}</Text>
+                }
+              </TouchableOpacity>
               <Text style={styles.label}>{t.calories}</Text>
               <TextInput style={styles.input} placeholder={t.calories} value={calories} onChangeText={setCalories} keyboardType="numeric" returnKeyType="next" />
               <Text style={styles.label}>{t.protein}</Text>

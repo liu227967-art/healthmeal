@@ -201,7 +201,32 @@ Return ONLY JSON, no other text. Format (daily example):
     return json.loads(raw[start:end])
 
 
-def summarize_article(title: str, content: str) -> dict:
+def estimate_nutrition(name: str, quantity: float, unit: str, lang: str = "zh") -> dict:
+    """估算食物营养成分。返回 {"calories": float, "protein": float, "fiber": float, "anti_inflammatory": float}"""
+    if lang == "en":
+        prompt = (
+            f"Estimate the nutrition for {quantity}{unit} of {name}. "
+            "Return ONLY JSON: {\"calories\": number, \"protein\": number, \"fiber\": number, \"anti_inflammatory\": 0-10 score}. "
+            "No other text."
+        )
+    else:
+        prompt = (
+            f"请估算 {quantity}{unit} 的{name}的营养成分。"
+            "只返回 JSON：{{\"calories\": 数字, \"protein\": 数字（克）, \"fiber\": 数字（克）, \"anti_inflammatory\": 0-10评分}}。"
+            "不要输出其他文字。"
+        )
+    response = client.messages.create(
+        model=MODEL,
+        max_tokens=256,
+        messages=[{"role": "user", "content": prompt}]
+    )
+    raw = response.content[0].text.strip()
+    start = raw.find("{")
+    end = raw.rfind("}") + 1
+    return json.loads(raw[start:end])
+
+
+
     """为文章生成中英文摘要。返回：{"zh": str, "en": str}"""
     response = client.messages.create(
         model=MODEL,

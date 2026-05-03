@@ -44,7 +44,7 @@ export default function ProfileScreen() {
 
   async function handleSyncAppleHealth() {
     if (Platform.OS !== "ios") {
-      Alert.alert("提示", "Apple Health 仅在 iOS 设备上可用")
+      Alert.alert("", i18n.common.appleHealthIosOnly)
       return
     }
     try {
@@ -69,9 +69,14 @@ export default function ProfileScreen() {
         type: "cardio",
         detail: { activity: "walking", duration_min: Math.round(steps / 100), intensity: "low", steps }
       })
-      Alert.alert("同步成功", `今日步数：${steps}步，消耗约 ${calories}kcal`)
+      Alert.alert(
+        i18n.common.appleHealthSyncSuccess,
+        i18n.common.appleHealthSyncSuccessMsg
+          .replace("{steps}", String(steps))
+          .replace("{calories}", String(calories))
+      )
     } catch {
-      Alert.alert("同步失败", "请确保已授权 Apple Health 权限")
+      Alert.alert(i18n.common.appleHealthSyncFail, i18n.common.appleHealthSyncFailMsg)
     }
   }
 
