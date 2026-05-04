@@ -289,6 +289,7 @@ const styles = StyleSheet.create({
   dateArrowText: { fontSize: 24, color: "#16a34a", fontWeight: "bold" },
   dateLabel: { fontSize: 15, fontWeight: "600", color: "#1a1a1a" },
   savedIngredientsBox: { marginBottom: 8 },
+  tagRow: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 4 },
   tag: { flexDirection: "row", alignItems: "center", backgroundColor: "#f0fdf4", borderRadius: 16, paddingVertical: 4, paddingHorizontal: 10, borderWidth: 1, borderColor: "#86efac" },
   tagText: { fontSize: 13, color: "#166534", marginRight: 4 },
   tagRemove: { paddingLeft: 2 },
