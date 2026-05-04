@@ -212,6 +212,7 @@ def generate_from_content(
     if not content:
         raise HTTPException(status_code=404, detail="Content not found")
 
+    lang = current_user.language or "zh"
     profile_obj = db.query(Profile).filter_by(user_id=current_user.id).first()
     profile_dict = {"weight": 65, "goal": "maintain", "allergies": [], "tdee": 2000}
     if profile_obj:
@@ -222,12 +223,13 @@ def generate_from_content(
             "tdee": calculate_tdee(profile_obj) or 2000
         }
 
-    context_note = f"参考以下健康研究：{content.title}。{content.summary_zh or ''}"
+    context_note = f"参考以下健康研究：{content.title}。{content.summary_zh or ''}" if lang == "zh" else f"Based on: {content.title}. {content.summary_en or ''}"
     result = generate_meal_plan(
         profile=profile_dict,
         ingredients=[context_note],
         style="other",
         range="daily",
-        exercise_calories=0
+        exercise_calories=0,
+        lang=lang
     )
     return {"meal_plan": result, "based_on": content.title}

@@ -123,7 +123,7 @@ export default function TrackingScreen() {
   async function handleLogExercise() {
     const detail = exerciseType === "cardio"
       ? { activity: exerciseActivity, duration_min: parseFloat(exerciseDuration) || 0, intensity: exerciseIntensity }
-      : { exercise: strengthExercise === "custom" ? (customExercise.trim() || "自定义") : strengthExercise, sets: parseFloat(exerciseSets) || 0, reps: parseFloat(exerciseReps) || 0, weight_kg: parseFloat(exerciseWeight) || 0 }
+      : { exercise: strengthExercise === "custom" ? (customExercise.trim() || te.custom) : strengthExercise, sets: parseFloat(exerciseSets) || 0, reps: parseFloat(exerciseReps) || 0, weight_kg: parseFloat(exerciseWeight) || 0 }
     try {
       const res = await logExercise({ type: exerciseType, detail })
       setShowExerciseModal(false)
@@ -137,7 +137,7 @@ export default function TrackingScreen() {
 
   async function handlePhoto() {
     const perm = await ImagePicker.requestCameraPermissionsAsync()
-    if (!perm.granted) { Alert.alert(t.needAlbumPerm); return }
+    if (!perm.granted) { Alert.alert(t.needCameraPermission); return }
     const result = await ImagePicker.launchCameraAsync({ base64: true, quality: 0.7 })
     if (result.canceled || !result.assets?.length) return
     setAnalyzing(true)

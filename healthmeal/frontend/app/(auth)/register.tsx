@@ -3,13 +3,14 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "reac
 import { useRouter } from "expo-router"
 import { useAuthStore } from "../../store/authStore"
 import { registerApi } from "../../services/auth"
-import { zh } from "../../i18n/zh"
+import { useTranslation } from "../../hooks/useTranslation"
 
 export default function RegisterScreen() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const { setAuth, language } = useAuthStore()
-  const t = zh
+  const { t: i18n } = useTranslation()
+  const t = i18n
   const router = useRouter()
 
   async function handleRegister() {
@@ -17,7 +18,7 @@ export default function RegisterScreen() {
       const data = await registerApi(email, password, language)
       await setAuth(data.access_token, data.role, data.language)
     } catch {
-      Alert.alert(t.common.error, "注册失败，邮箱可能已被使用")
+      Alert.alert(t.common.error, t.auth.registerFail)
     }
   }
 

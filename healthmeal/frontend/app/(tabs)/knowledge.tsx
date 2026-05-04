@@ -243,7 +243,7 @@ export default function KnowledgeScreen() {
                 {generatingId === item.id && (
                   <View style={styles.generatingRow}>
                     <ActivityIndicator color="#16a34a" size="small" />
-                    <Text style={styles.generatingText}>正在生成餐谱...</Text>
+                    <Text style={styles.generatingText}>{t.generating || "..."}</Text>
                   </View>
                 )}
                 <ContentCard
@@ -274,7 +274,7 @@ export default function KnowledgeScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-              <TextInput style={styles.noteInput} placeholder="标题" value={noteTitle}
+              <TextInput style={styles.noteInput} placeholder={t.newNote} value={noteTitle}
                 onChangeText={setNoteTitle} returnKeyType="next" />
               <TextInput style={[styles.noteInput, styles.noteContentInput]}
                 placeholder={t.noteContentPlaceholder}

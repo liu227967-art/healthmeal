@@ -12,7 +12,7 @@ client = anthropic.Anthropic(
     api_key=os.getenv("ANTHROPIC_API_KEY"),
     base_url=os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
 )
-MODEL = "claude-opus-4-6"
+MODEL = "claude-opus-4-5"
 
 
 def _resize_image_base64(image_base64: str, max_px: int = 1024, quality: int = 75) -> str:
@@ -227,6 +227,7 @@ def estimate_nutrition(name: str, quantity: float, unit: str, lang: str = "zh") 
 
 
 
+def summarize_article(title: str, content: str) -> dict:
     """为文章生成中英文摘要。返回：{"zh": str, "en": str}"""
     response = client.messages.create(
         model=MODEL,

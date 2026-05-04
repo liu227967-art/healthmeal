@@ -122,7 +122,7 @@ export default function HomeScreen() {
       <Modal visible={showLangPicker} transparent animationType="fade">
         <TouchableOpacity style={styles.langOverlay} activeOpacity={1} onPress={() => setShowLangPicker(false)}>
           <View style={styles.langMenu}>
-            <Text style={styles.langMenuTitle}>选择语言</Text>
+            <Text style={styles.langMenuTitle}>{t.social.selectLanguage}</Text>
             {LANGUAGES.map(({ code, label }) => (
               <TouchableOpacity key={code} style={[styles.langOption, language === code && styles.langOptionActive]}
                 onPress={() => { setLanguage(code); setShowLangPicker(false) }}>

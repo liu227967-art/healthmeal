@@ -3,13 +3,14 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "reac
 import { useRouter } from "expo-router"
 import { useAuthStore } from "../../store/authStore"
 import { loginApi } from "../../services/auth"
-import { zh } from "../../i18n/zh"
+import { useTranslation } from "../../hooks/useTranslation"
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const { setAuth } = useAuthStore()
-  const t = zh
+  const { t: i18n } = useTranslation()
+  const t = i18n
   const router = useRouter()
 
   async function handleLogin() {
@@ -17,7 +18,7 @@ export default function LoginScreen() {
       const data = await loginApi(email, password)
       await setAuth(data.access_token, data.role, data.language)
     } catch {
-      Alert.alert(t.common.error, "邮箱或密码错误")
+      Alert.alert(t.common.error, t.auth.loginFail)
     }
   }
 
