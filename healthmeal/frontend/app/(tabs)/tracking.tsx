@@ -314,6 +314,33 @@ export default function TrackingScreen() {
             </View>
           )}
 
+            {/* 运动 tab 内容 */}
+            {mainTab === "exercise" && (
+              <View>
+                {/* 运动概览卡片 */}
+                <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 20, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 }}>
+                  <Text style={{ fontSize: 16, fontWeight: "600", color: "#1a1a1a", marginBottom: 12 }}>今日运动</Text>
+                  <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
+                    <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "#f0fdf4", alignItems: "center", justifyContent: "center" }}>
+                      <Text style={{ fontSize: 28 }}>🏃</Text>
+                    </View>
+                    <View>
+                      <Text style={{ fontSize: 28, fontWeight: "bold", color: "#16a34a" }}>
+                        {dailySummary?.exercise_calories_burned ?? 0}
+                      </Text>
+                      <Text style={{ fontSize: 13, color: "#6b7280" }}>kcal 已消耗</Text>
+                    </View>
+                  </View>
+                </View>
+                {/* 引导添加运动 */}
+                <TouchableOpacity
+                  style={{ backgroundColor: "#16a34a", borderRadius: 14, padding: 16, alignItems: "center" }}
+                  onPress={() => setShowExerciseModal(true)}>
+                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>＋ 记录运动</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+
         </ScrollView>
         )
       )}
