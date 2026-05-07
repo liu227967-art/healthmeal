@@ -51,7 +51,7 @@ export default function ProfileScreen() {
       const [f, r] = await Promise.all([getFriends(), getFriendRequests()])
       setFriends(f)
       setFriendRequests(r)
-    } catch {}
+    } catch { Alert.alert(i18n.common.error) }
   }, [])
 
   const loadStats = useCallback(async () => {
@@ -59,7 +59,7 @@ export default function ProfileScreen() {
       const today = todayStr()
       if (statsTab === "weekly") setWeeklySummary(await getWeeklySummary(today))
       else setMonthlySummary(await getMonthlySummary(today))
-    } catch {}
+    } catch { Alert.alert(i18n.common.error) }
   }, [statsTab])
 
   useEffect(() => {
@@ -77,7 +77,8 @@ export default function ProfileScreen() {
   }
 
   async function handleAcceptFriend(id: number) {
-    try { await acceptFriendRequest(id); await loadFriends() } catch {}
+    try { await acceptFriendRequest(id); await loadFriends() }
+    catch { Alert.alert(i18n.common.error) }
   }
 
   async function handleSave() {

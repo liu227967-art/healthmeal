@@ -48,7 +48,9 @@ export default function HomeScreen() {
   const [showLangPicker, setShowLangPicker] = useState(false)
 
   const load = useCallback(async () => {
-    try { setSummary(await getDailySummary(todayStr())) } catch {}
+    try { setSummary(await getDailySummary(todayStr())) } catch {
+      // 网络失败静默处理，不影响页面展示
+    }
     finally { setLoading(false); setRefreshing(false) }
   }, [])
 
@@ -115,8 +117,8 @@ export default function HomeScreen() {
           <View style={[s.card, { paddingVertical: 16 }]}>
             <View style={{ flexDirection: "row", gap: 10 }}>
               <QuickBtn icon="🍽" label={th.logMeal} color="#16a34a" onPress={() => router.push("/(tabs)/tracking")} />
-              <QuickBtn icon="🏃" label={th.exerciseBurned} color="#3b82f6" onPress={() => router.push("/(tabs)/tracking")} />
-              <QuickBtn icon="🛒" label={th.ingredients} color="#f59e0b" onPress={() => router.push("/(tabs)/tracking")} />
+              <QuickBtn icon="🏃" label={th.exerciseBurned} color="#3b82f6" onPress={() => router.push({ pathname: "/(tabs)/tracking", params: { tab: "exercise" } })} />
+              <QuickBtn icon="🛒" label={th.ingredients} color="#f59e0b" onPress={() => router.push({ pathname: "/(tabs)/tracking", params: { tab: "ingredients" } })} />
               <QuickBtn icon="🤖" label={th.genMeal} color="#8b5cf6" onPress={() => router.push("/(tabs)/meal")} />
             </View>
           </View>

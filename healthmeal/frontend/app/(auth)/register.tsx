@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native"
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native"
 import { useRouter } from "expo-router"
 import { useAuthStore } from "../../store/authStore"
 import { registerApi } from "../../services/auth"
@@ -8,17 +8,25 @@ import { useTranslation } from "../../hooks/useTranslation"
 export default function RegisterScreen() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [loading, setLoading] = useState(false)
   const { setAuth, language } = useAuthStore()
   const { t: i18n } = useTranslation()
   const t = i18n
   const router = useRouter()
 
   async function handleRegister() {
+    if (!email.trim() || !password.trim()) {
+      Alert.alert(t.common.error, t.auth.registerFail)
+      return
+    }
+    setLoading(true)
     try {
       const data = await registerApi(email, password, language)
       await setAuth(data.access_token, data.role, data.language, email)
     } catch {
       Alert.alert(t.common.error, t.auth.registerFail)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -32,6 +40,7 @@ export default function RegisterScreen() {
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        editable={!loading}
       />
       <TextInput
         style={styles.input}
@@ -39,11 +48,12 @@ export default function RegisterScreen() {
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        editable={!loading}
       />
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>{t.auth.registerButton}</Text>
+      <TouchableOpacity style={[styles.button, loading && { opacity: 0.7 }]} onPress={handleRegister} disabled={loading}>
+        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.buttonText}>{t.auth.registerButton}</Text>}
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => router.push("/(auth)/login")}>
+      <TouchableOpacity onPress={() => router.push("/(auth)/login")} disabled={loading}>
         <Text style={styles.link}>{t.auth.hasAccount}</Text>
       </TouchableOpacity>
     </View>

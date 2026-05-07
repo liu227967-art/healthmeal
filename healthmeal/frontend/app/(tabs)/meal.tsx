@@ -169,7 +169,9 @@ export default function MealScreen() {
       setArticles(data)
       const bms = await getBookmarks()
       setBookmarkedIds(bms.map(b => b.id))
-    } catch {} finally { setArticlesLoading(false) }
+    } catch {
+      Alert.alert(i18n.common.error)
+    } finally { setArticlesLoading(false) }
   }, [])
 
   const loadShopping = useCallback(async () => {
@@ -182,20 +184,30 @@ export default function MealScreen() {
   }, [discoverTab, loadArticles, loadShopping])
 
   async function handleToggleBookmark(id: number, isBookmarked: boolean) {
+    // 乐观更新
+    setBookmarkedIds(prev => isBookmarked ? prev.filter(b => b !== id) : [...prev, id])
     try {
       if (isBookmarked) {
         await removeBookmark(id)
-        setBookmarkedIds(prev => prev.filter(b => b !== id))
       } else {
         await addBookmark(id)
-        setBookmarkedIds(prev => [...prev, id])
       }
-    } catch {}
+    } catch {
+      // 回滚乐观更新
+      setBookmarkedIds(prev => isBookmarked ? [...prev, id] : prev.filter(b => b !== id))
+      Alert.alert(i18n.common.error)
+    }
   }
 
   async function handleGenerateShopping() {
     setGeneratingShopping(true)
-    try { await generateShoppingList(language); await loadShopping() }
+    try {
+      const result = await generateShoppingList(language)
+      await loadShopping()
+      if (!result.items || result.items.length === 0) {
+        Alert.alert("", i18n.social.noMealPlan)
+      }
+    }
     catch { Alert.alert(i18n.common.error) }
     finally { setGeneratingShopping(false) }
   }

@@ -6,6 +6,7 @@ import {
 } from "react-native"
 import { Picker } from "@react-native-picker/picker"
 import * as ImagePicker from "expo-image-picker"
+import { useLocalSearchParams } from "expo-router"
 import {
   addFoodLog, addFoodLogFromPhoto, getDailySummary,
   getWeeklySummary, getMonthlySummary, logExercise, estimateNutrition,
@@ -36,8 +37,15 @@ export default function TrackingScreen() {
   const { t: i18n } = useTranslation()
   const t = i18n.tracking
   const te = i18n.exercise
+  const params = useLocalSearchParams<{ tab?: string }>()
   const [mainTab, setMainTab] = useState<"food" | "exercise" | "ingredients">("food")
   const [tab, setTab] = useState<"daily" | "weekly" | "monthly">("daily")
+
+  // 支持从首页快捷按钮直接跳转到指定 tab
+  useEffect(() => {
+    if (params.tab === "exercise") setMainTab("exercise")
+    else if (params.tab === "ingredients") setMainTab("ingredients")
+  }, [params.tab])
   const [ingredients, setIngredients] = useState<IngredientData[]>([])
   const [ingName, setIngName] = useState("")
   const [ingQty, setIngQty] = useState("100")
@@ -82,7 +90,7 @@ export default function TrackingScreen() {
         setMonthlySummary(data)
       }
     } catch {
-      // 静默失败
+      Alert.alert(i18n.common.error)
     } finally {
       setLoading(false)
     }
@@ -98,7 +106,9 @@ export default function TrackingScreen() {
   }, [mainTab])
 
   const loadIngredients = useCallback(async () => {
-    try { setIngredients(await getIngredients(todayStr())) } catch {}
+    try { setIngredients(await getIngredients(todayStr())) } catch (e) {
+      // 静默失败，离线时不报错
+    }
   }, [])
 
   useEffect(() => { loadIngredients() }, [loadIngredients])
@@ -113,18 +123,20 @@ export default function TrackingScreen() {
   }
 
   async function handleDeleteIngredient(id: number) {
-    try { await deleteIngredient(id); await loadIngredients() } catch {}
+    try { await deleteIngredient(id); await loadIngredients() }
+    catch { Alert.alert(i18n.common.error) }
   }
 
   async function handleAddManual() {
     if (!foodName.trim()) { Alert.alert(t.foodName); return }
+    const foodNameWithQty = quantity && unit ? `${foodName.trim()} (${quantity}${unit})` : foodName.trim()
     try {
       await addFoodLog({
         meal_type: mealType,
         input_method: "manual",
         date: todayStr(),
         food_items: [{
-          name: foodName.trim(),
+          name: foodNameWithQty,
           calories: parseFloat(calories) || 0,
           protein: parseFloat(protein) || 0,
           fiber: parseFloat(fiber) || 0,
@@ -156,6 +168,10 @@ export default function TrackingScreen() {
   }
 
   async function handleLogExercise() {
+    if (exerciseType === "cardio" && (!exerciseDuration.trim() || parseFloat(exerciseDuration) <= 0)) {
+      Alert.alert(i18n.common.error, te.duration)
+      return
+    }
     const detail = exerciseType === "cardio"
       ? { activity: exerciseActivity, duration_min: parseFloat(exerciseDuration) || 0, intensity: exerciseIntensity }
       : { exercise: strengthExercise === "custom" ? (customExercise.trim() || te.custom) : strengthExercise, sets: parseFloat(exerciseSets) || 0, reps: parseFloat(exerciseReps) || 0, weight_kg: parseFloat(exerciseWeight) || 0 }
