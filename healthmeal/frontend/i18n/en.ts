@@ -172,6 +172,13 @@ export const en = {
     lunch: "Lunch",
     dinner: "Dinner",
     snack: "Snack",
+    todayOverview: "Today's Overview",
+    carbs: "Carbs",
+    fat: "Fat",
+    target: "Target",
+    todayRecommend: "Today's Recommendation",
+    highProtein: "High Protein Diet",
+    viewRecommend: "View",
   },
   common: {
     save: "Save",

@@ -1,56 +1,42 @@
-import { useState, useEffect, useCallback } from "react"
-import {
-  View, Text, ScrollView, TouchableOpacity,
-  StyleSheet, ActivityIndicator, RefreshControl, Modal
-} from "react-native"
+import { useState, useCallback } from "react"
+import { View, Text, ScrollView, TouchableOpacity, StyleSheet, ActivityIndicator, RefreshControl, Modal } from "react-native"
 import { useRouter } from "expo-router"
 import { useFocusEffect } from "expo-router"
 import { getDailySummary, DailySummary } from "../../services/tracking"
 import { useAuthStore } from "../../store/authStore"
 import { useTranslation } from "../../hooks/useTranslation"
+import { CircleRing } from "../../components/CircleRing"
 
 const todayStr = () => new Date().toISOString().split("T")[0]
+const LANGUAGES = [{ code: "zh", label: "中文" }, { code: "en", label: "English" }]
 
-const LANGUAGES = [
-  { code: "zh", label: "中文" },
-  { code: "en", label: "English" },
-]
-
-function ProgressRing({ value, target, color = "#16a34a" }: { value: number; target: number; color?: string }) {
+function MacroBar({ label, value, target, color }: { label: string; value: number; target: number; color: string }) {
   const pct = Math.min((value / (target || 1)) * 100, 100)
   return (
-    <View style={ring.track}>
-      <View style={[ring.fill, { width: `${pct}%` as any, backgroundColor: color }]} />
+    <View style={{ flex: 1 }}>
+      <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
+        <Text style={{ fontSize: 12, color: "#6b7280" }}>{label}</Text>
+        <Text style={{ fontSize: 12, color: "#1a1a1a", fontWeight: "600" }}>{value}<Text style={{ color: "#9ca3af" }}>/{target}g</Text></Text>
+      </View>
+      <View style={{ height: 6, backgroundColor: "#f3f4f6", borderRadius: 3 }}>
+        <View style={{ height: 6, borderRadius: 3, backgroundColor: color, width: `${pct}%` as any }} />
+      </View>
     </View>
   )
 }
-const ring = StyleSheet.create({
-  track: { height: 10, backgroundColor: "#e8f0e8", borderRadius: 5, marginTop: 6, marginBottom: 2 },
-  fill: { height: 10, borderRadius: 5 },
-})
 
-function NutrientCard({
-  label, value, target, unit, color,
-}: { label: string; value: number; target: number | null; unit: string; color: string }) {
+function QuickBtn({ icon, label, color, onPress }: { icon: string; label: string; color: string; onPress: () => void }) {
   return (
-    <View style={styles.nutriCard}>
-      <Text style={[styles.nutriLabel, { color }]}>{label}</Text>
-      <Text style={styles.nutriValue}>
-        <Text style={styles.nutriBig}>{value}</Text>
-        {target ? ` / ${target.toFixed(0)}` : ""}
-        <Text style={styles.nutriUnit}> {unit}</Text>
-      </Text>
-      {target ? <ProgressRing value={value} target={target} color={color} /> : null}
-    </View>
+    <TouchableOpacity style={[qs.btn, { backgroundColor: color + "15" }]} onPress={onPress} activeOpacity={0.7}>
+      <Text style={{ fontSize: 22 }}>{icon}</Text>
+      <Text style={[qs.label, { color }]}>{label}</Text>
+    </TouchableOpacity>
   )
 }
-
-const MEAL_ICONS: Record<string, string> = {
-  breakfast: "🌅",
-  lunch: "☀️",
-  dinner: "🌙",
-  snack: "🍎",
-}
+const qs = StyleSheet.create({
+  btn: { flex: 1, alignItems: "center", paddingVertical: 14, borderRadius: 14, gap: 6 },
+  label: { fontSize: 12, fontWeight: "600" },
+})
 
 export default function HomeScreen() {
   const router = useRouter()
@@ -62,257 +48,140 @@ export default function HomeScreen() {
   const [showLangPicker, setShowLangPicker] = useState(false)
 
   const load = useCallback(async () => {
-    try {
-      const data = await getDailySummary(todayStr())
-      setSummary(data)
-    } catch {
-      // 网络失败静默处理
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
+    try { setSummary(await getDailySummary(todayStr())) } catch {}
+    finally { setLoading(false); setRefreshing(false) }
   }, [])
 
-  useEffect(() => { load() }, [load])
-
   useFocusEffect(useCallback(() => { load() }, [load]))
-
-  const onRefresh = () => {
-    setRefreshing(true)
-    load()
-  }
 
   const today = new Date()
   const th = t.home
   const dateStr = language === "zh"
     ? `${today.getMonth() + 1}月${today.getDate()}日`
     : `${today.toLocaleString("en", { month: "short" })} ${today.getDate()}`
-  const weekday = th.weekdays[today.getDay()]
 
-  const calorieLeft = summary
-    ? Math.max(0, (summary.target_calories ?? 2000) - summary.total_calories)
-    : null
-
-  const antiScore = summary?.anti_inflammatory_score ?? 0
-  const antiColor = antiScore >= 7 ? "#16a34a" : antiScore >= 4 ? "#f59e0b" : "#ef4444"
+  const targetCal = summary?.target_calories ?? 2000
+  const consumed = summary?.total_calories ?? 0
+  const remaining = Math.max(0, targetCal - consumed)
+  const burned = summary?.exercise_calories_burned ?? 0
 
   return (
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#16a34a" />}
-    >
-      {/* 顶部问候 */}
-      <View style={styles.header}>
+    <ScrollView style={s.container} contentContainerStyle={s.content}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={() => { setRefreshing(true); load() }} tintColor="#16a34a" />}>
+
+      <View style={s.header}>
         <View>
-          <Text style={styles.greeting}>{th.greeting}</Text>
-          <Text style={styles.dateText}>{dateStr} {weekday}</Text>
+          <Text style={s.greeting}>{th.greeting}</Text>
+          <Text style={s.sub}>{dateStr} {th.weekdays[today.getDay()]}</Text>
         </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity style={styles.langBtn} onPress={() => setShowLangPicker(true)}>
-            <Text style={styles.langBtnText}>{language === "zh" ? "中文" : language === "en" ? "EN" : language.toUpperCase()}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.profileBtn} onPress={() => router.push("/(tabs)/profile")}>
-            <Text style={styles.profileIcon}>👤</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={s.langBtn} onPress={() => setShowLangPicker(true)}>
+          <Text style={s.langBtnText}>{language === "zh" ? "中文" : "EN"}</Text>
+        </TouchableOpacity>
       </View>
 
-      {/* 语言选择弹窗 */}
       <Modal visible={showLangPicker} transparent animationType="fade">
-        <TouchableOpacity style={styles.langOverlay} activeOpacity={1} onPress={() => setShowLangPicker(false)}>
-          <View style={styles.langMenu}>
-            <Text style={styles.langMenuTitle}>{t.social.selectLanguage}</Text>
+        <TouchableOpacity style={s.overlay} activeOpacity={1} onPress={() => setShowLangPicker(false)}>
+          <View style={s.langMenu}>
             {LANGUAGES.map(({ code, label }) => (
-              <TouchableOpacity key={code} style={[styles.langOption, language === code && styles.langOptionActive]}
+              <TouchableOpacity key={code} style={[s.langOpt, language === code && s.langOptActive]}
                 onPress={() => { setLanguage(code); setShowLangPicker(false) }}>
-                <Text style={[styles.langOptionText, language === code && styles.langOptionTextActive]}>{label}</Text>
-                {language === code && <Text style={styles.langCheck}>✓</Text>}
+                <Text style={[s.langOptText, language === code && { color: "#16a34a", fontWeight: "600" }]}>{label}</Text>
+                {language === code && <Text style={{ color: "#16a34a" }}>✓</Text>}
               </TouchableOpacity>
             ))}
           </View>
         </TouchableOpacity>
       </Modal>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#16a34a" style={{ marginTop: 60 }} />
-      ) : (
+      {loading ? <ActivityIndicator size="large" color="#16a34a" style={{ marginTop: 60 }} /> : (
         <>
-          {/* 热量总览卡片 */}
-          <View style={styles.calorieCard}>
-            <View style={styles.calorieRow}>
-              <View style={styles.calorieMain}>
-                <Text style={styles.calorieNum}>{summary?.total_calories ?? 0}</Text>
-                <Text style={styles.calorieLabel}>{th.consumed}</Text>
-              </View>
-              <View style={styles.calorieDivider} />
-              <View style={styles.calorieItem}>
-                <Text style={styles.calorieItemNum}>{summary?.exercise_calories_burned ?? 0}</Text>
-                <Text style={styles.calorieItemLabel}>{th.exerciseBurned}</Text>
-              </View>
-              <View style={styles.calorieDivider} />
-              <View style={styles.calorieItem}>
-                <Text style={[styles.calorieItemNum, { color: "#16a34a" }]}>{calorieLeft ?? "—"}</Text>
-                <Text style={styles.calorieItemLabel}>{th.remaining}</Text>
+          <View style={s.card}>
+            <Text style={s.cardTitle}>{(th as any).todayOverview ?? "今日概览"}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 20, marginTop: 12 }}>
+              <CircleRing value={consumed} target={targetCal} size={110} strokeWidth={10} color="#16a34a" unit="kcal" />
+              <View style={{ flex: 1, gap: 10 }}>
+                <MacroBar label={th.protein} value={Math.round(summary?.total_protein ?? 0)} target={Math.round(summary?.target_protein ?? 120)} color="#3b82f6" />
+                <MacroBar label={(th as any).carbs ?? "碳水"} value={Math.round((summary as any)?.total_carbs ?? 0)} target={220} color="#f59e0b" />
+                <MacroBar label={(th as any).fat ?? "脂肪"} value={Math.round((summary as any)?.total_fat ?? 0)} target={60} color="#ef4444" />
               </View>
             </View>
-            {summary?.target_calories ? (
-              <ProgressRing value={summary.total_calories} target={summary.target_calories} color="#16a34a" />
-            ) : null}
-          </View>
-
-          {/* 营养素卡片 */}
-          <View style={styles.nutriRow}>
-            <NutrientCard
-              label={th.protein}
-              value={summary?.total_protein ?? 0}
-              target={summary?.target_protein ?? null}
-              unit="g"
-              color="#3b82f6"
-            />
-            <NutrientCard
-              label={th.fiber}
-              value={summary?.total_fiber ?? 0}
-              target={30}
-              unit="g"
-              color="#f59e0b"
-            />
-            <View style={styles.nutriCard}>
-              <Text style={[styles.nutriLabel, { color: antiColor }]}>{th.antiScore}</Text>
-              <Text style={[styles.nutriBig, { color: antiColor }]}>{antiScore}</Text>
-              <Text style={styles.nutriUnit}>/10</Text>
+            <View style={s.calRow}>
+              <View style={s.calItem}><Text style={s.calNum}>{remaining}</Text><Text style={s.calLabel}>{th.remaining}</Text></View>
+              <View style={s.calItem}><Text style={[s.calNum, { color: "#f59e0b" }]}>{burned}</Text><Text style={s.calLabel}>{th.exerciseBurned}</Text></View>
+              <View style={s.calItem}><Text style={[s.calNum, { color: "#16a34a" }]}>{targetCal}</Text><Text style={s.calLabel}>{(th as any).target ?? "目标"}</Text></View>
             </View>
           </View>
 
-          {/* 今日餐次 */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{th.todayMeals}</Text>
-            {summary && summary.logs.length > 0 ? (
-              (() => {
-                const order = ["breakfast", "lunch", "dinner", "snack"]
-                const mealLabels: Record<string, string> = {
-                  breakfast: th.breakfast, lunch: th.lunch,
-                  dinner: th.dinner, snack: th.snack,
-                }
-                const groups: Record<string, typeof summary.logs> = {}
-                summary.logs.forEach(log => {
-                  if (!groups[log.meal_type]) groups[log.meal_type] = []
-                  groups[log.meal_type].push(log)
-                })
-                return order.filter(k => groups[k]).map(type => {
-                  const logs = groups[type]
-                  const totalCal = logs.reduce((s, l) => s + l.total_calories, 0)
-                  const allFoods = logs.flatMap(l => l.food_items.map(f => f.name))
-                  return (
-                    <View key={type} style={styles.mealRow}>
-                      <Text style={styles.mealIcon}>{MEAL_ICONS[type] ?? "🍽"}</Text>
-                      <View style={styles.mealInfo}>
-                        <Text style={styles.mealType}>{mealLabels[type] ?? type}</Text>
-                        <Text style={styles.mealItems} numberOfLines={1}>
-                          {allFoods.join("、")}
-                        </Text>
-                      </View>
-                      <Text style={styles.mealCal}>{totalCal.toFixed(0)} kcal</Text>
+          <View style={[s.card, { paddingVertical: 16 }]}>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <QuickBtn icon="🍽" label={th.logMeal} color="#16a34a" onPress={() => router.push("/(tabs)/tracking")} />
+              <QuickBtn icon="🏃" label={th.exerciseBurned} color="#3b82f6" onPress={() => router.push("/(tabs)/tracking")} />
+              <QuickBtn icon="🛒" label={th.ingredients} color="#f59e0b" onPress={() => router.push("/(tabs)/tracking")} />
+              <QuickBtn icon="🤖" label={th.genMeal} color="#8b5cf6" onPress={() => router.push("/(tabs)/meal")} />
+            </View>
+          </View>
+
+          <TouchableOpacity style={s.banner} onPress={() => router.push("/(tabs)/meal")} activeOpacity={0.85}>
+            <View>
+              <Text style={s.bannerSub}>{(th as any).todayRecommend ?? "今日推荐饮食"}</Text>
+              <Text style={s.bannerTitle}>{(th as any).highProtein ?? "高蛋白减脂餐"}</Text>
+              <View style={s.bannerBtn}><Text style={s.bannerBtnText}>{(th as any).viewRecommend ?? "查看推荐"}</Text></View>
+            </View>
+            <Text style={{ fontSize: 48 }}>🥗</Text>
+          </TouchableOpacity>
+
+          {summary && summary.logs.length > 0 && (
+            <View style={s.card}>
+              <Text style={s.cardTitle}>{th.todayMeals}</Text>
+              {(["breakfast","lunch","dinner","snack"] as const).map(type => {
+                const logs = summary.logs.filter(l => l.meal_type === type)
+                if (!logs.length) return null
+                const cal = logs.reduce((a, l) => a + l.total_calories, 0)
+                const foods = logs.flatMap(l => l.food_items.map(f => f.name))
+                const icons: Record<string, string> = { breakfast: "🌅", lunch: "☀️", dinner: "🌙", snack: "🍎" }
+                const labels: Record<string, string> = { breakfast: th.breakfast, lunch: th.lunch, dinner: th.dinner, snack: th.snack }
+                return (
+                  <View key={type} style={s.mealRow}>
+                    <Text style={{ fontSize: 22, marginRight: 12 }}>{icons[type]}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={{ fontSize: 15, fontWeight: "600", color: "#1a1a1a" }}>{labels[type]}</Text>
+                      <Text style={{ fontSize: 13, color: "#9ca3af" }} numberOfLines={1}>{foods.join("、")}</Text>
                     </View>
-                  )
-                })
-              })()
-            ) : (
-              <Text style={styles.emptyText}>{th.noRecord}</Text>
-            )}
-          </View>
-
-          {/* 快捷操作 */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{th.quickActions}</Text>
-            <View style={styles.quickRow}>
-              <TouchableOpacity
-                style={[styles.quickBtn, { backgroundColor: "#16a34a" }]}
-                onPress={() => router.push("/(tabs)/tracking")}
-              >
-                <Text style={styles.quickIcon}>✏️</Text>
-                <Text style={styles.quickLabel}>{th.logMeal}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.quickBtn, { backgroundColor: "#3b82f6" }]}
-                onPress={() => router.push("/(tabs)/meal")}
-              >
-                <Text style={styles.quickIcon}>🍽</Text>
-                <Text style={styles.quickLabel}>{th.genMeal}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.quickBtn, { backgroundColor: "#f59e0b" }]}
-                onPress={() => router.push("/(tabs)/ingredients")}
-              >
-                <Text style={styles.quickIcon}>🛒</Text>
-                <Text style={styles.quickLabel}>{th.ingredients}</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.quickBtn, { backgroundColor: "#8b5cf6" }]}
-                onPress={() => router.push("/(tabs)/knowledge")}
-              >
-                <Text style={styles.quickIcon}>📚</Text>
-                <Text style={styles.quickLabel}>{th.knowledge}</Text>
-              </TouchableOpacity>
+                    <Text style={{ fontSize: 14, fontWeight: "600", color: "#16a34a" }}>{cal.toFixed(0)} kcal</Text>
+                  </View>
+                )
+              })}
             </View>
-          </View>
+          )}
         </>
       )}
     </ScrollView>
   )
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#f2f7f2" },
   content: { padding: 16, paddingBottom: 40 },
-
-  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 20 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 16 },
   greeting: { fontSize: 20, fontWeight: "700", color: "#1a1a1a" },
-  dateText: { fontSize: 13, color: "#6b7280", marginTop: 2 },
-  headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
+  sub: { fontSize: 13, color: "#6b7280", marginTop: 2 },
   langBtn: { paddingHorizontal: 12, paddingVertical: 7, borderRadius: 10, borderWidth: 1, borderColor: "#e8f0e8", backgroundColor: "#fff" },
   langBtnText: { fontSize: 13, color: "#16a34a", fontWeight: "600" },
-  profileBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: "#e8f0e8", justifyContent: "center", alignItems: "center" },
-  profileIcon: { fontSize: 18 },
-  langOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-start", alignItems: "flex-end", paddingTop: 100, paddingRight: 16 },
+  overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.3)", justifyContent: "flex-start", alignItems: "flex-end", paddingTop: 100, paddingRight: 16 },
   langMenu: { backgroundColor: "#fff", borderRadius: 16, padding: 8, minWidth: 140, shadowColor: "#000", shadowOpacity: 0.12, shadowRadius: 12, elevation: 8 },
-  langMenuTitle: { fontSize: 12, color: "#9ca3af", paddingHorizontal: 12, paddingVertical: 6 },
-  langOption: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12, paddingVertical: 12, borderRadius: 10 },
-  langOptionActive: { backgroundColor: "#f0fdf4" },
-  langOptionText: { fontSize: 15, color: "#1a1a1a" },
-  langOptionTextActive: { color: "#16a34a", fontWeight: "600" },
-  langCheck: { color: "#16a34a", fontSize: 16, fontWeight: "bold" },
-
-  calorieCard: { backgroundColor: "#fff", borderRadius: 16, padding: 20, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
-  calorieRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  calorieMain: { alignItems: "center", flex: 1.5 },
-  calorieNum: { fontSize: 36, fontWeight: "bold", color: "#16a34a" },
-  calorieLabel: { fontSize: 12, color: "#6b7280", marginTop: 2 },
-  calorieDivider: { width: 1, height: 40, backgroundColor: "#e8f0e8" },
-  calorieItem: { flex: 1, alignItems: "center" },
-  calorieItemNum: { fontSize: 20, fontWeight: "bold", color: "#1a1a1a" },
-  calorieItemLabel: { fontSize: 11, color: "#9ca3af", marginTop: 2 },
-
-  nutriRow: { flexDirection: "row", gap: 10, marginBottom: 12 },
-  nutriCard: { flex: 1, backgroundColor: "#fff", borderRadius: 16, padding: 14, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
-  nutriLabel: { fontSize: 12, fontWeight: "600", marginBottom: 4 },
-  nutriValue: { flexDirection: "row", alignItems: "baseline" },
-  nutriBig: { fontSize: 22, fontWeight: "bold", color: "#1a1a1a" },
-  nutriUnit: { fontSize: 11, color: "#9ca3af" },
-
-  section: { backgroundColor: "#fff", borderRadius: 16, padding: 20, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
-  sectionTitle: { fontSize: 17, fontWeight: "600", color: "#1a1a1a", marginBottom: 14 },
-
-  mealRow: { flexDirection: "row", alignItems: "center", paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: "#f2f7f2" },
-  mealIcon: { fontSize: 22, marginRight: 12 },
-  mealInfo: { flex: 1 },
-  mealType: { fontSize: 15, fontWeight: "600", color: "#1a1a1a" },
-  mealItems: { fontSize: 13, color: "#9ca3af", marginTop: 2 },
-  mealCal: { fontSize: 14, fontWeight: "600", color: "#16a34a" },
-  emptyText: { textAlign: "center", color: "#9ca3af", fontSize: 15, paddingVertical: 20 },
-
-  quickRow: { flexDirection: "row", gap: 10 },
-  quickBtn: { flex: 1, borderRadius: 14, padding: 14, alignItems: "center", justifyContent: "center" },
-  quickIcon: { fontSize: 24, marginBottom: 6 },
-  quickLabel: { fontSize: 12, color: "#fff", fontWeight: "600" },
+  langOpt: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingHorizontal: 12, paddingVertical: 12, borderRadius: 10 },
+  langOptActive: { backgroundColor: "#f0fdf4" },
+  langOptText: { fontSize: 15, color: "#1a1a1a" },
+  card: { backgroundColor: "#fff", borderRadius: 16, padding: 20, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3 },
+  cardTitle: { fontSize: 16, fontWeight: "600", color: "#1a1a1a" },
+  calRow: { flexDirection: "row", marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: "#f3f4f6" },
+  calItem: { flex: 1, alignItems: "center" },
+  calNum: { fontSize: 20, fontWeight: "bold", color: "#1a1a1a" },
+  calLabel: { fontSize: 11, color: "#9ca3af", marginTop: 2 },
+  banner: { backgroundColor: "#166534", borderRadius: 16, padding: 20, marginBottom: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  bannerSub: { fontSize: 12, color: "#86efac", marginBottom: 4 },
+  bannerTitle: { fontSize: 20, fontWeight: "bold", color: "#fff", marginBottom: 12 },
+  bannerBtn: { backgroundColor: "#16a34a", borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, alignSelf: "flex-start" },
+  bannerBtnText: { color: "#fff", fontSize: 13, fontWeight: "600" },
+  mealRow: { flexDirection: "row", alignItems: "center", paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: "#f3f4f6" },
 })

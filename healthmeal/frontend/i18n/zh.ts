@@ -172,6 +172,13 @@ export const zh = {
     lunch: "午餐",
     dinner: "晚餐",
     snack: "加餐",
+    todayOverview: "今日概览",
+    carbs: "碳水",
+    fat: "脂肪",
+    target: "目标",
+    todayRecommend: "今日推荐饮食",
+    highProtein: "高蛋白减脂餐",
+    viewRecommend: "查看推荐",
   },
   common: {
     save: "保存",
