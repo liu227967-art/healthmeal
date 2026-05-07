@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import {
   View, Text, ScrollView, TouchableOpacity,
   StyleSheet, Alert, ActivityIndicator, TextInput, Platform
@@ -7,6 +7,10 @@ import * as ImagePicker from "expo-image-picker"
 import { Picker } from "@react-native-picker/picker"
 import { generateMealPlan, identifyIngredientsFromPhoto, getIngredients, MealPlanData, MealItem } from "../../services/meal"
 import { useTranslation } from "../../hooks/useTranslation"
+import {
+  getHealthContent, getBookmarks, addBookmark, removeBookmark, HealthContentData
+} from "../../services/knowledge"
+import { generateShoppingList, getShoppingLists, ShoppingListData } from "../../services/social"
 
 function MealCard({ label, meal }: { label: string; meal: MealItem }) {
   const { t: i18n } = useTranslation()
@@ -61,6 +65,12 @@ export default function MealScreen() {
   const [savedIngredients, setSavedIngredients] = useState<string[]>([])
   const [recognizing, setRecognizing] = useState(false)
   const [baseDate, setBaseDate] = useState(new Date())
+  const [discoverTab, setDiscoverTab] = useState<"ai" | "articles" | "shopping">("ai")
+  const [articles, setArticles] = useState<HealthContentData[]>([])
+  const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([])
+  const [shoppingLists, setShoppingLists] = useState<ShoppingListData[]>([])
+  const [generatingShopping, setGeneratingShopping] = useState(false)
+  const [articlesLoading, setArticlesLoading] = useState(false)
 
   // 自动从今日食材读取
   useEffect(() => {
@@ -152,8 +162,58 @@ export default function MealScreen() {
     }
   }
 
+  const loadArticles = useCallback(async () => {
+    setArticlesLoading(true)
+    try {
+      const data = await getHealthContent()
+      setArticles(data)
+      const bms = await getBookmarks()
+      setBookmarkedIds(bms.map(b => b.id))
+    } catch {} finally { setArticlesLoading(false) }
+  }, [])
+
+  const loadShopping = useCallback(async () => {
+    try { setShoppingLists(await getShoppingLists()) } catch {}
+  }, [])
+
+  useEffect(() => {
+    if (discoverTab === "articles") loadArticles()
+    if (discoverTab === "shopping") loadShopping()
+  }, [discoverTab])
+
+  async function handleToggleBookmark(id: number, isBookmarked: boolean) {
+    try {
+      if (isBookmarked) {
+        await removeBookmark(id)
+        setBookmarkedIds(prev => prev.filter(b => b !== id))
+      } else {
+        await addBookmark(id)
+        setBookmarkedIds(prev => [...prev, id])
+      }
+    } catch {}
+  }
+
+  async function handleGenerateShopping() {
+    setGeneratingShopping(true)
+    try { await generateShoppingList(); await loadShopping() }
+    catch { Alert.alert(i18n.common.error) }
+    finally { setGeneratingShopping(false) }
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}>
+      <View style={styles.discoverTabRow}>
+        {([["ai", "AI 餐食"], ["articles", "健康文章"], ["shopping", "购物清单"]] as const).map(([key, label]) => (
+          <TouchableOpacity key={key}
+            style={[styles.discoverTab, discoverTab === key && styles.discoverTabActive]}
+            onPress={() => setDiscoverTab(key)}>
+            <Text style={[styles.discoverTabText, discoverTab === key && styles.discoverTabTextActive]}>{label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {discoverTab === "ai" && (
+        <View>
       <Text style={styles.title}>{t.title}</Text>
 
       <Text style={styles.label}>{t.style}</Text>
@@ -269,6 +329,62 @@ export default function MealScreen() {
           )}
         </View>
       )}
+        </View>
+      )}
+
+      {discoverTab === "articles" && (
+        <View style={{ padding: 16 }}>
+          {articlesLoading ? (
+            <ActivityIndicator color="#16a34a" style={{ marginTop: 40 }} />
+          ) : articles.length === 0 ? (
+            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 40 }}>暂无文章</Text>
+          ) : (
+            articles.map(item => (
+              <View key={item.id} style={{ backgroundColor: "#fff", borderRadius: 16, padding: 16, marginBottom: 10, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 }}>
+                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <View style={{ flex: 1, marginRight: 12 }}>
+                    <Text style={{ fontSize: 15, fontWeight: "600", color: "#1a1a1a", marginBottom: 4 }}>
+                      {item.title}
+                    </Text>
+                    <Text style={{ fontSize: 13, color: "#6b7280" }} numberOfLines={2}>
+                      {item.summary_zh || item.summary_en || ""}
+                    </Text>
+                  </View>
+                  <TouchableOpacity onPress={() => handleToggleBookmark(item.id, bookmarkedIds.includes(item.id))}>
+                    <Text style={{ fontSize: 20 }}>{bookmarkedIds.includes(item.id) ? "🔖" : "📄"}</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            ))
+          )}
+        </View>
+      )}
+
+      {discoverTab === "shopping" && (
+        <View style={{ padding: 16 }}>
+          <TouchableOpacity
+            style={[styles.genButton, generatingShopping && styles.genButtonDisabled]}
+            onPress={handleGenerateShopping}
+            disabled={generatingShopping}>
+            {generatingShopping
+              ? <ActivityIndicator color="#fff" />
+              : <Text style={styles.genButtonText}>🛒 生成购物清单</Text>}
+          </TouchableOpacity>
+          {shoppingLists.map(list => (
+            <View key={list.id} style={{ backgroundColor: "#fff", borderRadius: 16, padding: 16, marginBottom: 10, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 }}>
+              <Text style={{ fontSize: 15, fontWeight: "600", color: "#1a1a1a", marginBottom: 8 }}>{list.date}</Text>
+              {list.items?.map((item, i) => (
+                <Text key={i} style={{ fontSize: 13, color: "#6b7280", paddingVertical: 3 }}>
+                  • {item.name} {item.quantity}{item.unit}
+                </Text>
+              ))}
+            </View>
+          ))}
+          {shoppingLists.length === 0 && (
+            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 20 }}>暂无购物清单</Text>
+          )}
+        </View>
+      )}
     </ScrollView>
   )
 }
@@ -318,4 +434,9 @@ const styles = StyleSheet.create({
   summaryTitle: { fontSize: 16, fontWeight: "bold", color: "#166534", marginBottom: 8 },
   summaryLine: { fontSize: 14, color: "#166534", marginBottom: 4 },
   summaryNotes: { fontSize: 14, color: "#166534", marginTop: 8, fontStyle: "italic" },
+  discoverTabRow: { flexDirection: "row" as const, backgroundColor: "#f2f7f2", borderRadius: 12, padding: 4, margin: 16, marginBottom: 0 },
+  discoverTab: { flex: 1, paddingVertical: 8, alignItems: "center" as const, borderRadius: 10 },
+  discoverTabActive: { backgroundColor: "#fff", shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 4, elevation: 2 },
+  discoverTabText: { fontSize: 13, color: "#6b7280" },
+  discoverTabTextActive: { color: "#16a34a", fontWeight: "600" as const },
 })
