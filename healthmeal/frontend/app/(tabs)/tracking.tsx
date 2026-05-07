@@ -12,6 +12,10 @@ import {
   FoodLogData, DailySummary, WeeklySummary, MonthlySummary
 } from "../../services/tracking"
 import { useTranslation } from "../../hooks/useTranslation"
+import {
+  getIngredients, addIngredient, deleteIngredient,
+  IngredientData
+} from "../../services/meal"
 
 const todayStr = () => new Date().toISOString().split("T")[0]
 
@@ -32,7 +36,12 @@ export default function TrackingScreen() {
   const { t: i18n } = useTranslation()
   const t = i18n.tracking
   const te = i18n.exercise
+  const [mainTab, setMainTab] = useState<"food" | "exercise" | "ingredients">("food")
   const [tab, setTab] = useState<"daily" | "weekly" | "monthly">("daily")
+  const [ingredients, setIngredients] = useState<IngredientData[]>([])
+  const [ingName, setIngName] = useState("")
+  const [ingQty, setIngQty] = useState("100")
+  const [ingUnit, setIngUnit] = useState("g")
   const [dailySummary, setDailySummary] = useState<DailySummary | null>(null)
   const [weeklySummary, setWeeklySummary] = useState<WeeklySummary | null>(null)
   const [monthlySummary, setMonthlySummary] = useState<MonthlySummary | null>(null)
@@ -80,6 +89,25 @@ export default function TrackingScreen() {
   }, [tab])
 
   useEffect(() => { loadData() }, [loadData])
+
+  const loadIngredients = useCallback(async () => {
+    try { setIngredients(await getIngredients(todayStr())) } catch {}
+  }, [])
+
+  useEffect(() => { loadIngredients() }, [loadIngredients])
+
+  async function handleAddIngredient() {
+    if (!ingName.trim()) return
+    try {
+      await addIngredient({ name: ingName.trim(), quantity: parseFloat(ingQty) || 100, unit: ingUnit, input_method: "manual", date: todayStr() })
+      setIngName("")
+      await loadIngredients()
+    } catch { Alert.alert(i18n.common.error) }
+  }
+
+  async function handleDeleteIngredient(id: number) {
+    try { await deleteIngredient(id); await loadIngredients() } catch {}
+  }
 
   async function handleAddManual() {
     if (!foodName.trim()) { Alert.alert(t.foodName); return }
@@ -161,25 +189,38 @@ export default function TrackingScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Tab 切换 */}
+      {/* 主 tab 切换 */}
       <View style={styles.tabRow}>
-        {(["daily", "weekly", "monthly"] as const).map((key) => (
-          <TouchableOpacity key={key} style={[styles.tabBtn, tab === key && styles.tabBtnActive]}
-            onPress={() => setTab(key)}>
-            <Text style={[styles.tabText, tab === key && styles.tabTextActive]}>
-              {key === "daily" ? t.daily : key === "weekly" ? t.weekly : t.monthly}
-            </Text>
+        {([["food", "饮食记录"], ["exercise", "运动记录"], ["ingredients", "食材清单"]] as const).map(([key, label]) => (
+          <TouchableOpacity key={key} style={[styles.tabBtn, mainTab === key && styles.tabBtnActive]}
+            onPress={() => setMainTab(key)}>
+            <Text style={[styles.tabText, mainTab === key && styles.tabTextActive]}>{label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {loading ? (
-        <ActivityIndicator size="large" color="#16a34a" style={{ marginTop: 40 }} />
-      ) : (
-        <ScrollView contentContainerStyle={styles.content}>
+      {/* 饮食/统计子 tab（仅在 food tab 下显示） */}
+      {mainTab === "food" && (
+        <View style={[styles.tabRow, { borderTopWidth: 0 }]}>
+          {(["daily", "weekly", "monthly"] as const).map((key) => (
+            <TouchableOpacity key={key} style={[styles.tabBtn, tab === key && styles.tabBtnActive]}
+              onPress={() => setTab(key)}>
+              <Text style={[styles.tabText, tab === key && styles.tabTextActive]}>
+                {key === "daily" ? t.daily : key === "weekly" ? t.weekly : t.monthly}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      )}
 
-          {/* 今日视图 */}
-          {tab === "daily" && dailySummary && (
+      {(mainTab === "food" || mainTab === "exercise") && (
+        loading ? (
+          <ActivityIndicator size="large" color="#16a34a" style={{ marginTop: 40 }} />
+        ) : (
+          <ScrollView contentContainerStyle={styles.content}>
+
+            {/* 今日视图 */}
+            {mainTab === "food" && tab === "daily" && dailySummary && (
             <View>
               <View style={styles.statsCard}>
                 <Text style={styles.cardTitle}>{t.todayNutrition}</Text>
@@ -229,8 +270,8 @@ export default function TrackingScreen() {
             </View>
           )}
 
-          {/* 周视图 */}
-          {tab === "weekly" && weeklySummary && (
+            {/* 周视图 */}
+            {mainTab === "food" && tab === "weekly" && weeklySummary && (
             <View>
               <View style={styles.statsCard}>
                 <Text style={styles.cardTitle}>{t.weeklyTrend} ({weeklySummary.week_start} ~ {weeklySummary.week_end})</Text>
@@ -254,8 +295,8 @@ export default function TrackingScreen() {
             </View>
           )}
 
-          {/* 月视图 */}
-          {tab === "monthly" && monthlySummary && (
+            {/* 月视图 */}
+            {mainTab === "food" && tab === "monthly" && monthlySummary && (
             <View>
               <View style={styles.statsCard}>
                 <Text style={styles.cardTitle}>{monthlySummary.month} {t.monthOverview}</Text>
@@ -274,6 +315,47 @@ export default function TrackingScreen() {
           )}
 
         </ScrollView>
+        )
+      )}
+
+      {/* 食材清单 tab */}
+      {mainTab === "ingredients" && (
+        <ScrollView contentContainerStyle={styles.content}>
+          <View style={{ padding: 0 }}>
+            <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
+              <TextInput
+                style={[styles.input, { flex: 1, marginBottom: 0 }]}
+                placeholder="食材名称"
+                value={ingName}
+                onChangeText={setIngName}
+              />
+              <TextInput
+                style={{ borderWidth: 1, borderColor: "#e8f0e8", borderRadius: 12, padding: 14, fontSize: 15, backgroundColor: "#fff", width: 70 }}
+                placeholder="数量"
+                value={ingQty}
+                onChangeText={setIngQty}
+                keyboardType="numeric"
+              />
+              <TouchableOpacity
+                style={{ backgroundColor: "#16a34a", borderRadius: 12, paddingHorizontal: 14, justifyContent: "center", alignItems: "center" }}
+                onPress={handleAddIngredient}>
+                <Text style={{ color: "#fff", fontWeight: "600" }}>添加</Text>
+              </TouchableOpacity>
+            </View>
+            {ingredients.map(item => (
+              <View key={item.id} style={{ backgroundColor: "#fff", borderRadius: 14, marginBottom: 8, flexDirection: "row", alignItems: "center", padding: 14, shadowColor: "#000", shadowOpacity: 0.04, shadowRadius: 6, elevation: 2 }}>
+                <Text style={{ flex: 1, fontSize: 15, color: "#1a1a1a" }}>{item.name}</Text>
+                <Text style={{ fontSize: 13, color: "#6b7280", marginRight: 12 }}>{item.quantity}{item.unit}</Text>
+                <TouchableOpacity onPress={() => handleDeleteIngredient(item.id)}>
+                  <Text style={{ color: "#ef4444", fontSize: 18 }}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+            {ingredients.length === 0 && (
+              <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 20 }}>今日暂无食材</Text>
+            )}
+          </View>
+        </ScrollView>
       )}
 
       {analyzing && (
@@ -283,8 +365,8 @@ export default function TrackingScreen() {
         </View>
       )}
 
-      {/* 浮动按钮组（仅今日视图） */}
-      {tab === "daily" && (
+      {/* 浮动按钮组（仅饮食/运动 tab 的今日视图） */}
+      {mainTab === "food" && tab === "daily" && (
         <View style={styles.fabGroup}>
           <TouchableOpacity style={[styles.fab, { backgroundColor: "#3b82f6", marginBottom: 12 }]} onPress={() => setShowExerciseModal(true)}>
             <Text style={styles.fabText}>🏃</Text>
