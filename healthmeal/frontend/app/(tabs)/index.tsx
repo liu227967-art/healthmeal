@@ -96,19 +96,19 @@ export default function HomeScreen() {
       {loading ? <ActivityIndicator size="large" color="#16a34a" style={{ marginTop: 60 }} /> : (
         <>
           <View style={s.card}>
-            <Text style={s.cardTitle}>{(th as any).todayOverview ?? "今日概览"}</Text>
+            <Text style={s.cardTitle}>{th.todayOverview}</Text>
             <View style={{ flexDirection: "row", alignItems: "center", gap: 20, marginTop: 12 }}>
               <CircleRing value={consumed} target={targetCal} size={110} strokeWidth={10} color="#16a34a" unit="kcal" />
               <View style={{ flex: 1, gap: 10 }}>
                 <MacroBar label={th.protein} value={Math.round(summary?.total_protein ?? 0)} target={Math.round(summary?.target_protein ?? 120)} color="#3b82f6" />
-                <MacroBar label={(th as any).carbs ?? "碳水"} value={Math.round((summary as any)?.total_carbs ?? 0)} target={220} color="#f59e0b" />
-                <MacroBar label={(th as any).fat ?? "脂肪"} value={Math.round((summary as any)?.total_fat ?? 0)} target={60} color="#ef4444" />
+                <MacroBar label={th.fiber} value={Math.round(summary?.total_fiber ?? 0)} target={30} color="#f59e0b" />
+                <MacroBar label={th.antiScore} value={summary?.anti_inflammatory_score ?? 0} target={10} color="#16a34a" />
               </View>
             </View>
             <View style={s.calRow}>
               <View style={s.calItem}><Text style={s.calNum}>{remaining}</Text><Text style={s.calLabel}>{th.remaining}</Text></View>
               <View style={s.calItem}><Text style={[s.calNum, { color: "#f59e0b" }]}>{burned}</Text><Text style={s.calLabel}>{th.exerciseBurned}</Text></View>
-              <View style={s.calItem}><Text style={[s.calNum, { color: "#16a34a" }]}>{targetCal}</Text><Text style={s.calLabel}>{(th as any).target ?? "目标"}</Text></View>
+              <View style={s.calItem}><Text style={[s.calNum, { color: "#16a34a" }]}>{targetCal}</Text><Text style={s.calLabel}>{th.target}</Text></View>
             </View>
           </View>
 
@@ -123,9 +123,9 @@ export default function HomeScreen() {
 
           <TouchableOpacity style={s.banner} onPress={() => router.push("/(tabs)/meal")} activeOpacity={0.85}>
             <View>
-              <Text style={s.bannerSub}>{(th as any).todayRecommend ?? "今日推荐饮食"}</Text>
-              <Text style={s.bannerTitle}>{(th as any).highProtein ?? "高蛋白减脂餐"}</Text>
-              <View style={s.bannerBtn}><Text style={s.bannerBtnText}>{(th as any).viewRecommend ?? "查看推荐"}</Text></View>
+              <Text style={s.bannerSub}>{th.todayRecommend}</Text>
+              <Text style={s.bannerTitle}>{th.highProtein}</Text>
+              <View style={s.bannerBtn}><Text style={s.bannerBtnText}>{th.viewRecommend}</Text></View>
             </View>
             <Text style={{ fontSize: 48 }}>🥗</Text>
           </TouchableOpacity>
