@@ -195,7 +195,7 @@ export default function MealScreen() {
 
   async function handleGenerateShopping() {
     setGeneratingShopping(true)
-    try { await generateShoppingList(); await loadShopping() }
+    try { await generateShoppingList(language); await loadShopping() }
     catch { Alert.alert(i18n.common.error) }
     finally { setGeneratingShopping(false) }
   }
@@ -203,7 +203,7 @@ export default function MealScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}>
       <View style={styles.discoverTabRow}>
-        {([["ai", "AI 餐食"], ["articles", "健康文章"], ["shopping", "购物清单"]] as const).map(([key, label]) => (
+        {([["ai", t.aiTab], ["articles", t.articlesTab], ["shopping", t.shoppingTab]] as const).map(([key, label]) => (
           <TouchableOpacity key={key}
             style={[styles.discoverTab, discoverTab === key && styles.discoverTabActive]}
             onPress={() => setDiscoverTab(key)}>
@@ -337,7 +337,7 @@ export default function MealScreen() {
           {articlesLoading ? (
             <ActivityIndicator color="#16a34a" style={{ marginTop: 40 }} />
           ) : articles.length === 0 ? (
-            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 40 }}>暂无文章</Text>
+            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 40 }}>{t.noArticles}</Text>
           ) : (
             articles.map(item => (
               <View key={item.id} style={{ backgroundColor: "#fff", borderRadius: 16, padding: 16, marginBottom: 10, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 }}>
@@ -368,7 +368,7 @@ export default function MealScreen() {
             disabled={generatingShopping}>
             {generatingShopping
               ? <ActivityIndicator color="#fff" />
-              : <Text style={styles.genButtonText}>🛒 生成购物清单</Text>}
+              : <Text style={styles.genButtonText}>{t.generateShoppingBtn}</Text>}
           </TouchableOpacity>
           {shoppingLists.map(list => (
             <View key={list.id} style={{ backgroundColor: "#fff", borderRadius: 16, padding: 16, marginBottom: 10, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 }}>
@@ -381,7 +381,7 @@ export default function MealScreen() {
             </View>
           ))}
           {shoppingLists.length === 0 && (
-            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 20 }}>暂无购物清单</Text>
+            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 20 }}>{t.noShopping}</Text>
           )}
         </View>
       )}

@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert,
 import { Picker } from "@react-native-picker/picker"
 import { useRouter } from "expo-router"
 import { getProfile, updateProfile, ProfileData } from "../../services/profile"
-import { api } from "../../services/api"
+import { logExercise } from "../../services/tracking"
 import { useTranslation } from "../../hooks/useTranslation"
 import { useAuthStore } from "../../store/authStore"
 import {
@@ -72,7 +72,7 @@ export default function ProfileScreen() {
     try {
       await sendFriendRequest(friendEmail.trim())
       setFriendEmail("")
-      Alert.alert("", "好友请求已发送")
+      Alert.alert("", i18n.social.requestSent)
     } catch { Alert.alert(i18n.common.error) }
   }
 
@@ -113,7 +113,7 @@ export default function ProfileScreen() {
         )
       })
       const calories = Math.round(steps * 0.04)
-      await api.post("/exercise-logs", {
+      await logExercise({
         type: "cardio",
         detail: { activity: "walking", duration_min: Math.round(steps / 100), intensity: "low", steps }
       })
@@ -145,7 +145,7 @@ export default function ProfileScreen() {
       <Text style={styles.title}>{t.title}</Text>
 
       <View style={ps.tabRow}>
-        {([["info", "个人资料"], ["stats", "数据统计"], ["friends", "好友"]] as const).map(([key, label]) => (
+        {([["info", t.infoTab], ["stats", t.statsTab], ["friends", t.friendsTab]] as const).map(([key, label]) => (
           <TouchableOpacity key={key} style={[ps.tab, profileTab === key && ps.tabActive]}
             onPress={() => setProfileTab(key)}>
             <Text style={[ps.tabText, profileTab === key && ps.tabTextActive]}>{label}</Text>
@@ -216,7 +216,7 @@ export default function ProfileScreen() {
       {profileTab === "stats" && (
         <View style={{ padding: 16 }}>
           <View style={ps.tabRow}>
-            {([["weekly", "本周"], ["monthly", "本月"]] as const).map(([key, label]) => (
+            {([["weekly", t.weeklyTab], ["monthly", t.monthlyTab]] as const).map(([key, label]) => (
               <TouchableOpacity key={key} style={[ps.tab, statsTab === key && ps.tabActive]}
                 onPress={() => setStatsTab(key)}>
                 <Text style={[ps.tabText, statsTab === key && ps.tabTextActive]}>{label}</Text>
@@ -225,7 +225,7 @@ export default function ProfileScreen() {
           </View>
           {statsTab === "weekly" && weeklySummary && (
             <View style={ps.card}>
-              <Text style={ps.cardTitle}>本周热量趋势</Text>
+              <Text style={ps.cardTitle}>{t.weeklyCalorieTrend}</Text>
               {weeklySummary.daily_calories?.map((day, i) => (
                 <View key={i} style={{ flexDirection: "row", alignItems: "center", marginVertical: 4 }}>
                   <Text style={{ width: 40, fontSize: 12, color: "#6b7280" }}>{day.date?.slice(5)}</Text>
@@ -237,30 +237,30 @@ export default function ProfileScreen() {
               ))}
               <View style={{ marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: "#f3f4f6" }}>
                 <Text style={{ fontSize: 13, color: "#6b7280" }}>
-                  周均蛋白质：<Text style={{ color: "#3b82f6", fontWeight: "600" }}>{Math.round(weeklySummary.avg_protein ?? 0)}g</Text>
+                  {t.avgProteinLabel}：<Text style={{ color: "#3b82f6", fontWeight: "600" }}>{Math.round(weeklySummary.avg_protein ?? 0)}g</Text>
                 </Text>
                 <Text style={{ fontSize: 13, color: "#6b7280", marginTop: 4 }}>
-                  抗炎评分：<Text style={{ color: "#16a34a", fontWeight: "600" }}>{weeklySummary.avg_anti_inflammatory?.toFixed(1)}/10</Text>
+                  {t.antiScoreLabel}：<Text style={{ color: "#16a34a", fontWeight: "600" }}>{weeklySummary.avg_anti_inflammatory?.toFixed(1)}/10</Text>
                 </Text>
               </View>
             </View>
           )}
           {statsTab === "weekly" && !weeklySummary && (
-            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 40 }}>暂无本周数据</Text>
+            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 40 }}>{t.noWeeklyData}</Text>
           )}
           {statsTab === "monthly" && monthlySummary && (
             <View style={ps.card}>
-              <Text style={ps.cardTitle}>本月概览</Text>
+              <Text style={ps.cardTitle}>{t.monthlyOverview}</Text>
               <Text style={{ fontSize: 13, color: "#6b7280" }}>
-                记录天数：<Text style={{ color: "#16a34a", fontWeight: "600" }}>{monthlySummary.total_days_logged} 天</Text>
+                {t.daysLoggedLabel}：<Text style={{ color: "#16a34a", fontWeight: "600" }}>{monthlySummary.total_days_logged} {i18n.common.perDay}</Text>
               </Text>
               <Text style={{ fontSize: 13, color: "#6b7280", marginTop: 4 }}>
-                平均抗炎评分：<Text style={{ color: "#16a34a", fontWeight: "600" }}>{monthlySummary.avg_anti_inflammatory?.toFixed(1)}/10</Text>
+                {t.avgAntiLabel}：<Text style={{ color: "#16a34a", fontWeight: "600" }}>{monthlySummary.avg_anti_inflammatory?.toFixed(1)}/10</Text>
               </Text>
             </View>
           )}
           {statsTab === "monthly" && !monthlySummary && (
-            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 40 }}>暂无本月数据</Text>
+            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 40 }}>{t.noMonthlyData}</Text>
           )}
         </View>
       )}
@@ -270,33 +270,33 @@ export default function ProfileScreen() {
           <View style={[ps.card, { flexDirection: "row", gap: 8 }]}>
             <TextInput
               style={[ps.input, { flex: 1 }]}
-              placeholder="输入好友邮箱"
+              placeholder={t.friendEmailPlaceholder}
               value={friendEmail}
               onChangeText={setFriendEmail}
               keyboardType="email-address"
               autoCapitalize="none"
             />
             <TouchableOpacity style={ps.addBtn} onPress={handleSendFriendRequest}>
-              <Text style={{ color: "#fff", fontWeight: "600" }}>添加</Text>
+              <Text style={{ color: "#fff", fontWeight: "600" }}>{t.addFriendBtn}</Text>
             </TouchableOpacity>
           </View>
           {friendRequests.length > 0 && (
             <View style={ps.card}>
-              <Text style={ps.cardTitle}>待处理请求</Text>
+              <Text style={ps.cardTitle}>{t.pendingRequests}</Text>
               {friendRequests.map(req => (
                 <View key={req.id} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8 }}>
                   <Text style={{ flex: 1, fontSize: 14, color: "#1a1a1a" }}>{req.requester_email}</Text>
                   <TouchableOpacity style={ps.acceptBtn} onPress={() => handleAcceptFriend(req.id)}>
-                    <Text style={{ color: "#fff", fontSize: 13 }}>接受</Text>
+                    <Text style={{ color: "#fff", fontSize: 13 }}>{t.acceptBtn}</Text>
                   </TouchableOpacity>
                 </View>
               ))}
             </View>
           )}
           <View style={ps.card}>
-            <Text style={ps.cardTitle}>我的好友（{friends.length}）</Text>
+            <Text style={ps.cardTitle}>{t.myFriends}（{friends.length}）</Text>
             {friends.length === 0 ? (
-              <Text style={{ color: "#9ca3af", fontSize: 14, paddingVertical: 8 }}>还没有好友</Text>
+              <Text style={{ color: "#9ca3af", fontSize: 14, paddingVertical: 8 }}>{t.noFriendsYet}</Text>
             ) : (
               friends.map(f => (
                 <View key={f.id} style={{ flexDirection: "row", alignItems: "center", paddingVertical: 8 }}>

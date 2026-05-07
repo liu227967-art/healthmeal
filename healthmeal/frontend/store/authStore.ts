@@ -29,8 +29,8 @@ export const useAuthStore = create<AuthState>((set) => ({
     set({ language })
   },
   logout: async () => {
-    await AsyncStorage.multiRemove(["token", "role", "email"])
-    set({ token: null, role: null, email: null })
+    await AsyncStorage.multiRemove(["token", "role", "email", "language"])
+    set({ token: null, role: null, email: null, language: "zh" })
   },
   loadFromStorage: async () => {
     const token = await AsyncStorage.getItem("token")

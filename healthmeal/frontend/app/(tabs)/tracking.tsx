@@ -183,11 +183,11 @@ export default function TrackingScreen() {
           await addFoodLogFromPhoto(mealType, asset.base64)
         }
       }
-      await loadData()
     } catch {
       Alert.alert(i18n.common.error, t.analyzeFail)
     } finally {
       setAnalyzing(false)
+      await loadData()
     }
   }
 
@@ -198,7 +198,7 @@ export default function TrackingScreen() {
     <View style={styles.container}>
       {/* 主 tab 切换 */}
       <View style={styles.tabRow}>
-        {([["food", "饮食记录"], ["exercise", "运动记录"], ["ingredients", "食材清单"]] as const).map(([key, label]) => (
+        {([["food", t.foodTab], ["exercise", t.exerciseTab], ["ingredients", t.ingredientsTab]] as const).map(([key, label]) => (
           <TouchableOpacity key={key} style={[styles.tabBtn, mainTab === key && styles.tabBtnActive]}
             onPress={() => setMainTab(key)}>
             <Text style={[styles.tabText, mainTab === key && styles.tabTextActive]}>{label}</Text>
@@ -264,7 +264,7 @@ export default function TrackingScreen() {
                         {logs.map(log => (
                           <View key={log.id} style={styles.logCard}>
                             {log.food_items.map((item, i) => (
-                              <Text key={i} style={styles.foodItem}>{item.name} — {item.calories}kcal · {t.totalProtein}{item.protein}g</Text>
+                              <Text key={i} style={styles.foodItem}>{item.name} — {item.calories}kcal · {t.totalProtein}: {item.protein}g</Text>
                             ))}
                           </View>
                         ))}
@@ -326,7 +326,7 @@ export default function TrackingScreen() {
               <View>
                 {/* 运动概览卡片 */}
                 <View style={{ backgroundColor: "#fff", borderRadius: 16, padding: 20, marginBottom: 12, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 }}>
-                  <Text style={{ fontSize: 16, fontWeight: "600", color: "#1a1a1a", marginBottom: 12 }}>今日运动</Text>
+                  <Text style={{ fontSize: 16, fontWeight: "600", color: "#1a1a1a", marginBottom: 12 }}>{t.todayExercise}</Text>
                   <View style={{ flexDirection: "row", alignItems: "center", gap: 16 }}>
                     <View style={{ width: 64, height: 64, borderRadius: 32, backgroundColor: "#f0fdf4", alignItems: "center", justifyContent: "center" }}>
                       <Text style={{ fontSize: 28 }}>🏃</Text>
@@ -335,7 +335,7 @@ export default function TrackingScreen() {
                       <Text style={{ fontSize: 28, fontWeight: "bold", color: "#16a34a" }}>
                         {dailySummary?.exercise_calories_burned ?? 0}
                       </Text>
-                      <Text style={{ fontSize: 13, color: "#6b7280" }}>kcal 已消耗</Text>
+                      <Text style={{ fontSize: 13, color: "#6b7280" }}>{t.kcalBurned}</Text>
                     </View>
                   </View>
                 </View>
@@ -343,7 +343,7 @@ export default function TrackingScreen() {
                 <TouchableOpacity
                   style={{ backgroundColor: "#16a34a", borderRadius: 14, padding: 16, alignItems: "center" }}
                   onPress={() => setShowExerciseModal(true)}>
-                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>＋ 记录运动</Text>
+                  <Text style={{ color: "#fff", fontSize: 16, fontWeight: "600" }}>＋ {t.logExercise}</Text>
                 </TouchableOpacity>
               </View>
             )}
@@ -359,13 +359,13 @@ export default function TrackingScreen() {
             <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
               <TextInput
                 style={[styles.input, { flex: 1, marginBottom: 0 }]}
-                placeholder="食材名称"
+                placeholder={t.ingredientName}
                 value={ingName}
                 onChangeText={setIngName}
               />
               <TextInput
                 style={{ borderWidth: 1, borderColor: "#e8f0e8", borderRadius: 12, padding: 14, fontSize: 15, backgroundColor: "#fff", width: 70 }}
-                placeholder="数量"
+                placeholder={t.quantity}
                 value={ingQty}
                 onChangeText={setIngQty}
                 keyboardType="numeric"
@@ -373,7 +373,7 @@ export default function TrackingScreen() {
               <TouchableOpacity
                 style={{ backgroundColor: "#16a34a", borderRadius: 12, paddingHorizontal: 14, justifyContent: "center", alignItems: "center" }}
                 onPress={handleAddIngredient}>
-                <Text style={{ color: "#fff", fontWeight: "600" }}>添加</Text>
+                <Text style={{ color: "#fff", fontWeight: "600" }}>{t.add}</Text>
               </TouchableOpacity>
             </View>
             {ingredients.map(item => (
@@ -386,7 +386,7 @@ export default function TrackingScreen() {
               </View>
             ))}
             {ingredients.length === 0 && (
-              <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 20 }}>今日暂无食材</Text>
+              <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 20 }}>{t.noIngredients}</Text>
             )}
           </View>
         </ScrollView>
