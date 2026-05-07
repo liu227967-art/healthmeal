@@ -16,7 +16,7 @@ export function CircleRing({
   color = "#16a34a", label, unit = "kcal"
 }: Props) {
   const pct = Math.min(value / (target || 1), 1)
-  const inner = size - strokeWidth * 2
+  const inner = Math.max(size - strokeWidth * 2, 0)
   const deg = Math.round(pct * 360)
   const half = deg > 180
 
@@ -25,7 +25,7 @@ export function CircleRing({
       {/* 底圈 */}
       <View style={[s.track, { width: size, height: size, borderRadius: size / 2, borderWidth: strokeWidth, borderColor: "#e8f0e8" }]} />
       {/* 进度圈 */}
-      <View style={[s.abs, { width: size, height: size }]}>
+      <View style={[s.abs, { width: size, height: size, transform: [{ rotate: "-90deg" }] }]}>
         <View style={[s.half, { width: size / 2, height: size, left: size / 2 }]}>
           <View style={[s.arc, {
             width: size, height: size, borderRadius: size / 2,
