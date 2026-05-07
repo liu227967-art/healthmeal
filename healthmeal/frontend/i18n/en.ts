@@ -147,6 +147,10 @@ export const en = {
       monthly: "This Month",
     },
   },
+  tabs: {
+    record: "Record",
+    discover: "Discover",
+  },
   home: {
     title: "Home",
     greeting: "Hello, how's your day?",

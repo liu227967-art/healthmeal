@@ -31,7 +31,7 @@ export default function TabLayout() {
       }}
     >
       <Tabs.Screen name="index" options={{ title: t.home.title, tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🏠</Text> }} />
-      <Tabs.Screen name="tracking" options={{ title: "记录", tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📋</Text> }} />
+      <Tabs.Screen name="tracking" options={{ title: t.tabs.record, tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>📋</Text> }} />
       <Tabs.Screen
         name="quick-add"
         options={{
@@ -39,7 +39,7 @@ export default function TabLayout() {
           tabBarButton: () => <PlusButton onPress={() => router.push("/(tabs)/tracking")} />,
         }}
       />
-      <Tabs.Screen name="meal" options={{ title: "发现", tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🔍</Text> }} />
+      <Tabs.Screen name="meal" options={{ title: t.tabs.discover, tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>🔍</Text> }} />
       <Tabs.Screen name="profile" options={{ title: t.profile.title, tabBarIcon: ({ color }) => <Text style={{ fontSize: 20, color }}>👤</Text> }} />
       {/* 隐藏旧 tab，保留路由可访问 */}
       <Tabs.Screen name="ingredients" options={{ href: null }} />

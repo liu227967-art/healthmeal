@@ -147,6 +147,10 @@ export const zh = {
       monthly: "本月",
     },
   },
+  tabs: {
+    record: "记录",
+    discover: "发现",
+  },
   home: {
     title: "首页",
     greeting: "你好，今天过得怎样？",
