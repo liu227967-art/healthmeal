@@ -15,7 +15,7 @@ import { getWeeklySummary, getMonthlySummary, WeeklySummary, MonthlySummary } fr
 export default function ProfileScreen() {
   const { t: i18n } = useTranslation()
   const t = i18n.profile
-  const { logout } = useAuthStore()
+  const { logout, email: currentEmail } = useAuthStore()
   const router = useRouter()
   const [form, setForm] = useState<ProfileData>({
     height: undefined,
@@ -65,7 +65,7 @@ export default function ProfileScreen() {
   useEffect(() => {
     if (profileTab === "friends") loadFriends()
     if (profileTab === "stats") loadStats()
-  }, [profileTab, statsTab])
+  }, [profileTab, statsTab, loadFriends, loadStats])
 
   async function handleSendFriendRequest() {
     if (!friendEmail.trim()) return
@@ -303,7 +303,9 @@ export default function ProfileScreen() {
                   <View style={{ width: 36, height: 36, borderRadius: 18, backgroundColor: "#e8f0e8", alignItems: "center", justifyContent: "center", marginRight: 10 }}>
                     <Text style={{ fontSize: 16 }}>👤</Text>
                   </View>
-                  <Text style={{ fontSize: 14, color: "#1a1a1a" }}>{f.addressee_email}</Text>
+                  <Text style={{ fontSize: 14, color: "#1a1a1a" }}>
+                    {currentEmail && f.requester_email === currentEmail ? f.addressee_email : f.requester_email}
+                  </Text>
                 </View>
               ))
             )}

@@ -90,6 +90,13 @@ export default function TrackingScreen() {
 
   useEffect(() => { loadData() }, [loadData])
 
+  // 切换到运动 tab 时确保 daily 数据已加载（运动消耗来自 dailySummary）
+  useEffect(() => {
+    if (mainTab === "exercise" && !dailySummary) {
+      getDailySummary(todayStr()).then(setDailySummary).catch(() => {})
+    }
+  }, [mainTab])
+
   const loadIngredients = useCallback(async () => {
     try { setIngredients(await getIngredients(todayStr())) } catch {}
   }, [])

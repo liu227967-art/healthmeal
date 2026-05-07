@@ -16,7 +16,7 @@ export default function RegisterScreen() {
   async function handleRegister() {
     try {
       const data = await registerApi(email, password, language)
-      await setAuth(data.access_token, data.role, data.language)
+      await setAuth(data.access_token, data.role, data.language, email)
     } catch {
       Alert.alert(t.common.error, t.auth.registerFail)
     }

@@ -179,7 +179,7 @@ export default function MealScreen() {
   useEffect(() => {
     if (discoverTab === "articles") loadArticles()
     if (discoverTab === "shopping") loadShopping()
-  }, [discoverTab])
+  }, [discoverTab, loadArticles, loadShopping])
 
   async function handleToggleBookmark(id: number, isBookmarked: boolean) {
     try {

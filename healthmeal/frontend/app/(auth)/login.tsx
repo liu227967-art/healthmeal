@@ -16,7 +16,7 @@ export default function LoginScreen() {
   async function handleLogin() {
     try {
       const data = await loginApi(email, password)
-      await setAuth(data.access_token, data.role, data.language)
+      await setAuth(data.access_token, data.role, data.language, email)
     } catch {
       Alert.alert(t.common.error, t.auth.loginFail)
     }
