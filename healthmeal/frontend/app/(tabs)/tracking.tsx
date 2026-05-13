@@ -568,7 +568,7 @@ export default function TrackingScreen() {
                   <TouchableOpacity key={type}
                     style={[styles.mealTypeBtn, mealType === type && styles.mealTypeBtnActive]}
                     onPress={() => setMealType(type)}>
-                    <Text style={[styles.mealTypeTxt, mealType === type && styles.mealTypeTxtActive]}>
+                    <Text style={[styles.mealTypeTxt, mealType === type && styles.mealTypeTxtActive]} numberOfLines={1} adjustsFontSizeToFit>
                       {mealLabel(type)}
                     </Text>
                   </TouchableOpacity>
@@ -667,9 +667,9 @@ const styles = StyleSheet.create({
   modalTitle: { fontSize: 20, fontWeight: "700", marginBottom: 20, color: "#1a1a1a" },
   label: { fontSize: 13, color: "#6b7280", marginBottom: 8 },
   mealTypeRow: { flexDirection: "row", gap: 8, marginBottom: 16, flexWrap: "wrap" },
-  mealTypeBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: "#e8f0e8", alignItems: "center", minWidth: 70 },
+  mealTypeBtn: { flex: 1, paddingVertical: 10, borderRadius: 12, borderWidth: 1, borderColor: "#e8f0e8", alignItems: "center", minWidth: 80 },
   mealTypeBtnActive: { backgroundColor: "#16a34a", borderColor: "#16a34a" },
-  mealTypeTxt: { fontSize: 14, color: "#1a1a1a" },
+  mealTypeTxt: { fontSize: 13, color: "#1a1a1a" },
   mealTypeTxtActive: { color: "#fff", fontWeight: "600" },
   input: { borderWidth: 1, borderColor: "#e8f0e8", borderRadius: 12, padding: 14, marginBottom: 12, fontSize: 15, backgroundColor: "#fff" },
   addBtn: { backgroundColor: "#16a34a", borderRadius: 14, padding: 16, alignItems: "center" },
