@@ -15,6 +15,13 @@ client = anthropic.Anthropic(
 MODEL = "claude-sonnet-4-6"
 
 
+def _get_text(response) -> str:
+    for block in response.content:
+        if hasattr(block, "text"):
+            return block.text.strip()
+    raise ValueError("No text block in response")
+
+
 def _resize_image_base64(image_base64: str, max_px: int = 1024, quality: int = 75) -> str:
     """将图片压缩到 max_px × max_px 以内，避免 API 400 请求过大错误。"""
     raw = base64.b64decode(image_base64)
@@ -62,7 +69,7 @@ def identify_ingredients_from_image(image_base64: str, lang: str = "zh") -> list
             ],
         }]
     )
-    raw = response.content[0].text.strip()
+    raw = _get_text(response)
     start = raw.find("[")
     end = raw.rfind("]") + 1
     return json.loads(raw[start:end])
@@ -199,7 +206,7 @@ Return ONLY JSON, no other text. Format (daily example):
         max_tokens=4096,
         messages=[{"role": "user", "content": prompt}]
     )
-    raw = response.content[0].text.strip()
+    raw = _get_text(response)
     start = raw.find("{")
     end = raw.rfind("}") + 1
     return json.loads(raw[start:end])
@@ -224,7 +231,7 @@ def estimate_nutrition(name: str, quantity: float, unit: str, lang: str = "zh") 
         max_tokens=256,
         messages=[{"role": "user", "content": prompt}]
     )
-    raw = response.content[0].text.strip()
+    raw = _get_text(response)
     start = raw.find("{")
     end = raw.rfind("}") + 1
     return json.loads(raw[start:end])
@@ -245,7 +252,7 @@ def summarize_article(title: str, content: str) -> dict:
             )
         }]
     )
-    raw = response.content[0].text.strip()
+    raw = _get_text(response)
     start = raw.find("{")
     end = raw.rfind("}") + 1
     return json.loads(raw[start:end])
@@ -294,7 +301,7 @@ def analyze_food_photo(image_base64: str, language: str = "zh") -> dict:
             ],
         }]
     )
-    raw = response.content[0].text.strip()
+    raw = _get_text(response)
     start = raw.find("{")
     end = raw.rfind("}") + 1
     return json.loads(raw[start:end])
