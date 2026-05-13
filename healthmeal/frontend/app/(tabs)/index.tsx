@@ -10,13 +10,13 @@ import { localDateStr as todayStr } from "../../utils/date"
 
 const LANGUAGES = [{ code: "zh", label: "中文" }, { code: "en", label: "English" }]
 
-function MacroBar({ label, value, target, color }: { label: string; value: number; target: number; color: string }) {
+function MacroBar({ label, value, target, color, unit = "g" }: { label: string; value: number; target: number; color: string; unit?: string }) {
   const pct = Math.min((value / (target || 1)) * 100, 100)
   return (
     <View style={{ flex: 1 }}>
       <View style={{ flexDirection: "row", justifyContent: "space-between", marginBottom: 4 }}>
         <Text style={{ fontSize: 12, color: "#6b7280" }}>{label}</Text>
-        <Text style={{ fontSize: 12, color: "#1a1a1a", fontWeight: "600" }}>{value}<Text style={{ color: "#9ca3af" }}>/{target}g</Text></Text>
+        <Text style={{ fontSize: 12, color: "#1a1a1a", fontWeight: "600" }}>{value}<Text style={{ color: "#9ca3af" }}>/{target}{unit}</Text></Text>
       </View>
       <View style={{ height: 6, backgroundColor: "#f3f4f6", borderRadius: 3 }}>
         <View style={{ height: 6, borderRadius: 3, backgroundColor: color, width: `${pct}%` as any }} />
@@ -104,7 +104,7 @@ export default function HomeScreen() {
               <View style={{ flex: 1, gap: 10 }}>
                 <MacroBar label={th.protein} value={Math.round(summary?.total_protein ?? 0)} target={Math.round(summary?.target_protein ?? 120)} color="#3b82f6" />
                 <MacroBar label={th.fiber} value={Math.round(summary?.total_fiber ?? 0)} target={30} color="#f59e0b" />
-                <MacroBar label={th.antiScore} value={summary?.anti_inflammatory_score ?? 0} target={10} color="#16a34a" />
+                <MacroBar label={th.antiScore} value={summary?.anti_inflammatory_score ?? 0} target={10} color="#16a34a" unit="" />
               </View>
             </View>
             <View style={s.calRow}>
