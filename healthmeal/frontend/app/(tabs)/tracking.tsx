@@ -511,7 +511,7 @@ export default function TrackingScreen() {
                       <TouchableOpacity key={key}
                         style={[styles.mealTypeBtn, strengthExercise === key && styles.mealTypeBtnActive]}
                         onPress={() => setStrengthExercise(key)}>
-                        <Text style={[styles.mealTypeTxt, strengthExercise === key && styles.mealTypeTxtActive]} numberOfLines={1} adjustsFontSizeToFit>{te[key]}</Text>
+                        <Text style={[styles.mealTypeTxt, strengthExercise === key && styles.mealTypeTxtActive, { textAlign: "center" }]}>{te[key]}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -520,7 +520,7 @@ export default function TrackingScreen() {
                       <TouchableOpacity key={key}
                         style={[styles.mealTypeBtn, strengthExercise === key && styles.mealTypeBtnActive]}
                         onPress={() => setStrengthExercise(key)}>
-                        <Text style={[styles.mealTypeTxt, strengthExercise === key && styles.mealTypeTxtActive]} numberOfLines={1} adjustsFontSizeToFit>{te[key]}</Text>
+                        <Text style={[styles.mealTypeTxt, strengthExercise === key && styles.mealTypeTxtActive, { textAlign: "center" }]}>{te[key]}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
