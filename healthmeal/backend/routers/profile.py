@@ -19,7 +19,7 @@ ACTIVITY_MULTIPLIERS = {
 }
 
 GOAL_ADJUSTMENTS = {
-    "reduce_fat": -500,
+    "reduce_fat": None,   # -15% of TDEE, calculated dynamically
     "maintain": 0,
     "gain_muscle": 300,
 }
@@ -33,7 +33,11 @@ def calculate_tdee(profile: Profile) -> Optional[float]:
     else:
         bmr = 447.6 + 9.25 * w + 3.1 * h - 4.33 * a
     multiplier = ACTIVITY_MULTIPLIERS.get(profile.activity_level or "light", 1.375)
-    tdee = bmr * multiplier + GOAL_ADJUSTMENTS.get(profile.goal or "maintain", 0)
+    tdee = bmr * multiplier
+    if profile.goal == "reduce_fat":
+        tdee = tdee * 0.85
+    elif profile.goal == "gain_muscle":
+        tdee = tdee + 300
     return round(tdee, 1)
 
 

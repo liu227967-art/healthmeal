@@ -12,7 +12,7 @@ client = anthropic.Anthropic(
     api_key=os.getenv("ANTHROPIC_API_KEY"),
     base_url=os.getenv("ANTHROPIC_BASE_URL", "https://api.anthropic.com"),
 )
-MODEL = "claude-opus-4-5"
+MODEL = "claude-sonnet-4-6"
 
 
 def _resize_image_base64(image_base64: str, max_px: int = 1024, quality: int = 75) -> str:
