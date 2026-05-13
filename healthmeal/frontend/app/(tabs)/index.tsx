@@ -29,12 +29,12 @@ function QuickBtn({ icon, label, color, onPress }: { icon: string; label: string
   return (
     <TouchableOpacity style={[qs.btn, { backgroundColor: color + "15" }]} onPress={onPress} activeOpacity={0.7}>
       <Text style={{ fontSize: 22 }}>{icon}</Text>
-      <Text style={[qs.label, { color }]}>{label}</Text>
+      <Text style={[qs.label, { color }]} numberOfLines={1} adjustsFontSizeToFit>{label}</Text>
     </TouchableOpacity>
   )
 }
 const qs = StyleSheet.create({
-  btn: { flex: 1, alignItems: "center", paddingVertical: 14, borderRadius: 14, gap: 6 },
+  btn: { flex: 1, alignItems: "center", paddingVertical: 14, borderRadius: 14, gap: 6, paddingHorizontal: 4 },
   label: { fontSize: 12, fontWeight: "600" },
 })
 
