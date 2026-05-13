@@ -6,8 +6,8 @@ import { getDailySummary, DailySummary } from "../../services/tracking"
 import { useAuthStore } from "../../store/authStore"
 import { useTranslation } from "../../hooks/useTranslation"
 import { CircleRing } from "../../components/CircleRing"
+import { localDateStr as todayStr } from "../../utils/date"
 
-const todayStr = () => new Date().toISOString().split("T")[0]
 const LANGUAGES = [{ code: "zh", label: "中文" }, { code: "en", label: "English" }]
 
 function MacroBar({ label, value, target, color }: { label: string; value: number; target: number; color: string }) {
@@ -64,8 +64,8 @@ export default function HomeScreen() {
 
   const targetCal = summary?.target_calories ?? 2000
   const consumed = summary?.total_calories ?? 0
-  const remaining = Math.max(0, targetCal - consumed)
   const burned = summary?.exercise_calories_burned ?? 0
+  const remaining = Math.max(0, targetCal + burned - consumed)
 
   return (
     <ScrollView style={s.container} contentContainerStyle={s.content}
