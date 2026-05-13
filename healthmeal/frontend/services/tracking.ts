@@ -92,6 +92,10 @@ export async function getFoodLogs(date: string): Promise<FoodLogData[]> {
   return res.data
 }
 
+export async function deleteFoodLog(id: number): Promise<void> {
+  await api.delete(`/food-logs/${id}`)
+}
+
 export async function recordBodyMetric(data: {
   date: string
   weight?: number

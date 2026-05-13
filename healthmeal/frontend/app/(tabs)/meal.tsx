@@ -5,12 +5,15 @@ import {
 } from "react-native"
 import * as ImagePicker from "expo-image-picker"
 import { Picker } from "@react-native-picker/picker"
+import { useFocusEffect } from "expo-router"
 import { generateMealPlan, identifyIngredientsFromPhoto, getIngredients, MealPlanData, MealItem } from "../../services/meal"
+import { addFoodLog } from "../../services/tracking"
 import { useTranslation } from "../../hooks/useTranslation"
 import {
   getHealthContent, getBookmarks, addBookmark, removeBookmark, HealthContentData
 } from "../../services/knowledge"
 import { generateShoppingList, getShoppingLists, ShoppingListData } from "../../services/social"
+import { localDateStr } from "../../utils/date"
 
 function MealCard({ label, meal }: { label: string; meal: MealItem }) {
   const { t: i18n } = useTranslation()
@@ -71,15 +74,16 @@ export default function MealScreen() {
   const [shoppingLists, setShoppingLists] = useState<ShoppingListData[]>([])
   const [generatingShopping, setGeneratingShopping] = useState(false)
   const [articlesLoading, setArticlesLoading] = useState(false)
+  const [addingToLog, setAddingToLog] = useState(false)
 
-  // 自动从今日食材读取
-  useEffect(() => {
-    const today = new Date().toISOString().split("T")[0]
+  // 每次进入页面都重新读取今日食材，确保 tracking 页新增的食材能同步
+  useFocusEffect(useCallback(() => {
+    const today = localDateStr()
     getIngredients(today).then((data) => {
       const names = data.map(i => `${i.name} ${i.quantity}${i.unit}`)
-      setSavedIngredients(names)
+      setSavedIngredients([...new Set(names)])
     }).catch(() => {})
-  }, [])
+  }, []))
 
   // 根据 range 显示当前选中的日期描述
   function getDateLabel() {
@@ -109,7 +113,7 @@ export default function MealScreen() {
   }
 
   function getDateParam() {
-    return baseDate.toISOString().split("T")[0]
+    return localDateStr(baseDate)
   }
 
   function handleAddIngredient() {
@@ -135,7 +139,7 @@ export default function MealScreen() {
     if (result.canceled || !result.assets?.[0]?.base64) return
     setRecognizing(true)
     try {
-      const identified = await identifyIngredientsFromPhoto(result.assets[0].base64)
+      const identified = await identifyIngredientsFromPhoto(result.assets[0].base64, language)
       const newList = [...ingredients]
       identified.forEach((item: { name: string }) => {
         if (!newList.includes(item.name)) newList.push(item.name)
@@ -196,6 +200,39 @@ export default function MealScreen() {
       // 回滚乐观更新
       setBookmarkedIds(prev => isBookmarked ? [...prev, id] : prev.filter(b => b !== id))
       Alert.alert(i18n.common.error)
+    }
+  }
+
+  async function handleAddToLog() {
+    if (!plan) return
+    setAddingToLog(true)
+    const date = getDateParam()
+    const mealMap: Array<{ meal_type: string; meal: MealItem | undefined }> = [
+      { meal_type: "breakfast", meal: plan.content.breakfast },
+      { meal_type: "lunch", meal: plan.content.lunch },
+      { meal_type: "dinner", meal: plan.content.dinner },
+    ]
+    try {
+      await Promise.all(
+        mealMap
+          .filter(({ meal }) => !!meal)
+          .map(({ meal_type, meal }) =>
+            addFoodLog({
+              meal_type,
+              input_method: "meal_plan",
+              date,
+              food_items: [{ name: meal!.name, calories: meal!.calories, protein: meal!.protein, fiber: meal!.fiber, anti_inflammatory: 0 }],
+            })
+          )
+      )
+      Alert.alert(
+        language === "zh" ? "已加入记录" : "Added to log",
+        language === "zh" ? "已按餐谱记录今日饮食，如实际饮食不同可在记录页修改。" : "Meals logged. You can edit in the tracking page if your actual meals differ."
+      )
+    } catch {
+      Alert.alert(i18n.common.error, language === "zh" ? "记录失败，请重试" : "Failed to log, please try again")
+    } finally {
+      setAddingToLog(false)
     }
   }
 
@@ -264,8 +301,8 @@ export default function MealScreen() {
         <View style={styles.savedIngredientsBox}>
           <Text style={styles.label}>{t.todayIngredients}</Text>
           <View style={styles.tagRow}>
-            {savedIngredients.map(name => (
-              <View key={name} style={styles.tag}>
+            {savedIngredients.map((name, i) => (
+              <View key={`saved-${i}`} style={styles.tag}>
                 <Text style={styles.tagText}>{name}</Text>
               </View>
             ))}
@@ -339,6 +376,25 @@ export default function MealScreen() {
               <Text style={styles.summaryNotes}>{plan.content.summary.health_notes}</Text>
             </View>
           )}
+
+          <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+            <TouchableOpacity
+              style={[styles.genButton, { flex: 1, marginVertical: 0 }, addingToLog && styles.genButtonDisabled]}
+              onPress={handleAddToLog}
+              disabled={addingToLog}
+            >
+              {addingToLog
+                ? <ActivityIndicator color="#fff" />
+                : <Text style={styles.genButtonText}>{language === "zh" ? "按此计划进餐" : "Log this plan"}</Text>
+              }
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.genButton, { flex: 1, marginVertical: 0, backgroundColor: "#6b7280" }]}
+              onPress={() => setPlan(null)}
+            >
+              <Text style={styles.genButtonText}>{language === "zh" ? "跳过" : "Skip"}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
         </View>

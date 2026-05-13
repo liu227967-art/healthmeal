@@ -114,7 +114,7 @@ User profile:
 - Daily calorie target: {target_calories:.0f} kcal
 - Protein target: {target_protein:.0f}g/day
 - Food allergies: {allergy_str}
-- Available ingredients: {ingredients_str}
+- Ingredients on hand (optional reference, supplement by shopping as needed): {ingredients_str}
 
 Health requirements:
 1. Anti-inflammatory: prioritize Omega-3, polyphenols, curcumin
@@ -123,6 +123,8 @@ Health requirements:
 4. Minerals: calcium, iron, magnesium, zinc, potassium
 5. Fiber: 25-35g/day
 6. Organ health: note benefits for heart/liver/gut/kidney/bones
+
+Design a nutritionally complete and balanced meal plan first. Use the on-hand ingredients where they fit naturally, but do not limit the plan to only those ingredients — add whatever is needed for optimal nutrition.
 
 Return ONLY JSON, no other text. Format (daily example):
 {{
@@ -158,7 +160,7 @@ Return ONLY JSON, no other text. Format (daily example):
 - 每日热量目标：{target_calories:.0f} kcal
 - 蛋白质目标：{target_protein:.0f}g/天
 - 过敏食物：{allergy_str}
-- 今日可用食材：{ingredients_str}
+- 手边食材（仅供参考，不足的可补充采购）：{ingredients_str}
 
 健康标准（必须达到）：
 1. 抗炎：优先使用富含Omega-3、多酚、姜黄素的食材
@@ -167,6 +169,8 @@ Return ONLY JSON, no other text. Format (daily example):
 4. 矿物质：钙、铁、镁、锌、钾达标
 5. 膳食纤维：每日25-35g
 6. 器官健康：标注每餐对心脏/肝脏/肠道/肾脏/骨骼的益处
+
+请以营养完整均衡为首要原则设计餐谱，手边食材可自然融入，但不要局限于这些食材——需要什么就加什么，以达到最优营养。
 
 请只返回 JSON，不要输出其他文字。格式如下（daily范围示例）：
 {{

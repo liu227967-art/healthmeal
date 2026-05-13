@@ -115,6 +115,17 @@ def get_food_logs(date: str = None,
     return [_build_food_log_response(l) for l in query.order_by(FoodLog.logged_at).all()]
 
 
+@router.delete("/food-logs/{log_id}", status_code=204)
+def delete_food_log(log_id: int,
+                    current_user: User = Depends(get_current_user),
+                    db: Session = Depends(get_db)):
+    log = db.query(FoodLog).filter_by(id=log_id, user_id=current_user.id).first()
+    if not log:
+        raise HTTPException(status_code=404, detail="Not found")
+    db.delete(log)
+    db.commit()
+
+
 @router.post("/body-metrics", response_model=BodyMetricResponse, status_code=201)
 def record_body_metric(body: BodyMetricRequest,
                        current_user: User = Depends(get_current_user),

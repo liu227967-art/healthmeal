@@ -8,7 +8,7 @@ import { Picker } from "@react-native-picker/picker"
 import * as ImagePicker from "expo-image-picker"
 import { useLocalSearchParams, useFocusEffect } from "expo-router"
 import {
-  addFoodLog, addFoodLogFromPhoto, getDailySummary,
+  addFoodLog, addFoodLogFromPhoto, deleteFoodLog, getDailySummary,
   getWeeklySummary, getMonthlySummary, logExercise, estimateNutrition,
   FoodLogData, DailySummary, WeeklySummary, MonthlySummary
 } from "../../services/tracking"
@@ -33,7 +33,7 @@ const pb = StyleSheet.create({
 })
 
 export default function TrackingScreen() {
-  const { t: i18n } = useTranslation()
+  const { t: i18n, language } = useTranslation()
   const t = i18n.tracking
   const te = i18n.exercise
   const params = useLocalSearchParams<{ tab?: string }>()
@@ -124,6 +124,23 @@ export default function TrackingScreen() {
   async function handleDeleteIngredient(id: number) {
     try { await deleteIngredient(id); await loadIngredients() }
     catch { Alert.alert(i18n.common.error) }
+  }
+
+  async function handleDeleteFoodLog(id: number) {
+    Alert.alert(
+      language === "zh" ? "删除记录" : "Delete log",
+      language === "zh" ? "确认删除这条饮食记录？" : "Delete this food log entry?",
+      [
+        { text: i18n.common.cancel, style: "cancel" },
+        {
+          text: language === "zh" ? "删除" : "Delete", style: "destructive",
+          onPress: async () => {
+            try { await deleteFoodLog(id); await loadData() }
+            catch { Alert.alert(i18n.common.error) }
+          }
+        }
+      ]
+    )
   }
 
   async function handleAddManual() {
@@ -280,9 +297,14 @@ export default function TrackingScreen() {
                         </View>
                         {logs.map(log => (
                           <View key={log.id} style={styles.logCard}>
-                            {log.food_items.map((item, i) => (
-                              <Text key={i} style={styles.foodItem}>{item.name} — {item.calories}kcal · {t.totalProtein}: {item.protein}g</Text>
-                            ))}
+                            <View style={{ flex: 1 }}>
+                              {log.food_items.map((item, i) => (
+                                <Text key={i} style={styles.foodItem}>{item.name} — {item.calories}kcal · {t.totalProtein}: {item.protein}g</Text>
+                              ))}
+                            </View>
+                            <TouchableOpacity onPress={() => handleDeleteFoodLog(log.id)} style={{ paddingLeft: 12, paddingVertical: 8, paddingRight: 4 }} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
+                              <Text style={{ fontSize: 20, color: "#ef4444", fontWeight: "bold" }}>×</Text>
+                            </TouchableOpacity>
                           </View>
                         ))}
                         <Text style={styles.logTotal}>{t.subtotal}：{mealTotalCal.toFixed(0)}kcal · {mealTotalPro.toFixed(1)}g {t.totalProtein}</Text>
@@ -618,7 +640,7 @@ const styles = StyleSheet.create({
   statLine: { fontSize: 15, color: "#1a1a1a", marginBottom: 6 },
   bold: { fontWeight: "700" },
   empty: { textAlign: "center", color: "#9ca3af", marginTop: 40, fontSize: 15 },
-  logCard: { backgroundColor: "#f2f7f2", borderRadius: 12, padding: 14, marginBottom: 4 },
+  logCard: { backgroundColor: "#f2f7f2", borderRadius: 12, padding: 14, marginBottom: 4, flexDirection: "row", alignItems: "flex-start" },
   mealGroup: { marginBottom: 14 },
   mealGroupHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6 },
   mealGroupTotal: { fontSize: 15, fontWeight: "700", color: "#16a34a" },
