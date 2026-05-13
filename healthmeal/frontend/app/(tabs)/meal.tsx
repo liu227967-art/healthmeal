@@ -4,16 +4,13 @@ import {
   StyleSheet, Alert, ActivityIndicator, TextInput, Platform
 } from "react-native"
 import * as ImagePicker from "expo-image-picker"
-import { Picker } from "@react-native-picker/picker"
 import { useFocusEffect } from "expo-router"
 import { generateMealPlan, identifyIngredientsFromPhoto, getIngredients, MealPlanData, MealItem } from "../../services/meal"
 import { addFoodLog } from "../../services/tracking"
 import { useTranslation } from "../../hooks/useTranslation"
-import {
-  getHealthContent, getBookmarks, addBookmark, removeBookmark, HealthContentData
-} from "../../services/knowledge"
 import { generateShoppingList, getShoppingLists, ShoppingListData } from "../../services/social"
 import { localDateStr } from "../../utils/date"
+import { SegmentedControl } from "../../components/SegmentedControl"
 
 function MealCard({ label, meal }: { label: string; meal: MealItem }) {
   const { t: i18n } = useTranslation()
@@ -68,12 +65,9 @@ export default function MealScreen() {
   const [savedIngredients, setSavedIngredients] = useState<string[]>([])
   const [recognizing, setRecognizing] = useState(false)
   const [baseDate, setBaseDate] = useState(new Date())
-  const [discoverTab, setDiscoverTab] = useState<"ai" | "articles" | "shopping">("ai")
-  const [articles, setArticles] = useState<HealthContentData[]>([])
-  const [bookmarkedIds, setBookmarkedIds] = useState<number[]>([])
+  const [discoverTab, setDiscoverTab] = useState<"ai" | "shopping">("ai")
   const [shoppingLists, setShoppingLists] = useState<ShoppingListData[]>([])
   const [generatingShopping, setGeneratingShopping] = useState(false)
-  const [articlesLoading, setArticlesLoading] = useState(false)
   const [addingToLog, setAddingToLog] = useState(false)
 
   // 每次进入页面都重新读取今日食材，确保 tracking 页新增的食材能同步
@@ -166,26 +160,13 @@ export default function MealScreen() {
     }
   }
 
-  const loadArticles = useCallback(async () => {
-    setArticlesLoading(true)
-    try {
-      const data = await getHealthContent()
-      setArticles(data)
-      const bms = await getBookmarks()
-      setBookmarkedIds(bms.map(b => b.id))
-    } catch {
-      Alert.alert(i18n.common.error)
-    } finally { setArticlesLoading(false) }
-  }, [])
-
   const loadShopping = useCallback(async () => {
     try { setShoppingLists(await getShoppingLists()) } catch {}
   }, [])
 
   useEffect(() => {
-    if (discoverTab === "articles") loadArticles()
     if (discoverTab === "shopping") loadShopping()
-  }, [discoverTab, loadArticles, loadShopping])
+  }, [discoverTab, loadShopping])
 
   async function handleToggleBookmark(id: number, isBookmarked: boolean) {
     // 乐观更新
@@ -252,7 +233,7 @@ export default function MealScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" automaticallyAdjustKeyboardInsets={Platform.OS === "ios"}>
       <View style={styles.discoverTabRow}>
-        {([["ai", t.aiTab], ["articles", t.articlesTab], ["shopping", t.shoppingTab]] as const).map(([key, label]) => (
+        {([["ai", t.aiTab], ["shopping", t.shoppingTab]] as const).map(([key, label]) => (
           <TouchableOpacity key={key}
             style={[styles.discoverTab, discoverTab === key && styles.discoverTabActive]}
             onPress={() => setDiscoverTab(key)}>
@@ -279,11 +260,11 @@ export default function MealScreen() {
       </View>
 
       <Text style={styles.label}>{t.range}</Text>
-      <Picker selectedValue={range} onValueChange={(v) => { setRange(v); setBaseDate(new Date()) }}>
-        {Object.entries(t.ranges).map(([key, label]) => (
-          <Picker.Item key={key} label={label} value={key} />
-        ))}
-      </Picker>
+      <SegmentedControl
+        options={Object.entries(t.ranges).map(([key, label]) => ({ label, value: key }))}
+        value={range}
+        onChange={(v) => { setRange(v); setBaseDate(new Date()) }}
+      />
 
       {/* 日期导航 */}
       <View style={styles.dateNav}>
@@ -397,34 +378,6 @@ export default function MealScreen() {
           </View>
         </View>
       )}
-        </View>
-      )}
-
-      {discoverTab === "articles" && (
-        <View style={{ padding: 16 }}>
-          {articlesLoading ? (
-            <ActivityIndicator color="#16a34a" style={{ marginTop: 40 }} />
-          ) : articles.length === 0 ? (
-            <Text style={{ textAlign: "center", color: "#9ca3af", fontSize: 14, paddingVertical: 40 }}>{t.noArticles}</Text>
-          ) : (
-            articles.map(item => (
-              <View key={item.id} style={{ backgroundColor: "#fff", borderRadius: 16, padding: 16, marginBottom: 10, shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 8, elevation: 3 }}>
-                <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" }}>
-                  <View style={{ flex: 1, marginRight: 12 }}>
-                    <Text style={{ fontSize: 15, fontWeight: "600", color: "#1a1a1a", marginBottom: 4 }}>
-                      {item.title}
-                    </Text>
-                    <Text style={{ fontSize: 13, color: "#6b7280" }} numberOfLines={2}>
-                      {item.summary_zh || item.summary_en || ""}
-                    </Text>
-                  </View>
-                  <TouchableOpacity onPress={() => handleToggleBookmark(item.id, bookmarkedIds.includes(item.id))}>
-                    <Text style={{ fontSize: 20 }}>{bookmarkedIds.includes(item.id) ? "🔖" : "📄"}</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ))
-          )}
         </View>
       )}
 

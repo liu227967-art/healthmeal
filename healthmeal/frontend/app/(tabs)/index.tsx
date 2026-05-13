@@ -108,9 +108,9 @@ export default function HomeScreen() {
               </View>
             </View>
             <View style={s.calRow}>
-              <View style={s.calItem}><Text style={s.calNum}>{remaining}</Text><Text style={s.calLabel}>{th.remaining}</Text></View>
-              <View style={s.calItem}><Text style={[s.calNum, { color: "#f59e0b" }]}>{burned}</Text><Text style={s.calLabel}>{th.exerciseBurned}</Text></View>
-              <View style={s.calItem}><Text style={[s.calNum, { color: "#16a34a" }]}>{targetCal}</Text><Text style={s.calLabel}>{th.target}</Text></View>
+              <View style={s.calItem}><Text style={s.calNum}>{Math.round(remaining)}</Text><Text style={s.calLabel}>{th.remaining}</Text></View>
+              <View style={s.calItem}><Text style={[s.calNum, { color: "#f59e0b" }]}>{Math.round(burned)}</Text><Text style={s.calLabel}>{th.exerciseBurned}</Text></View>
+              <View style={s.calItem}><Text style={[s.calNum, { color: "#16a34a" }]}>{Math.round(targetCal)}</Text><Text style={s.calLabel}>{th.target}</Text></View>
             </View>
           </View>
 

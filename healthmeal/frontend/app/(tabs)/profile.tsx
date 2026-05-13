@@ -1,16 +1,17 @@
 import { useState, useEffect, useCallback } from "react"
 import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Alert, Platform } from "react-native"
-import { Picker } from "@react-native-picker/picker"
 import { useRouter } from "expo-router"
 import { getProfile, updateProfile, ProfileData } from "../../services/profile"
 import { logExercise } from "../../services/tracking"
 import { useTranslation } from "../../hooks/useTranslation"
 import { useAuthStore } from "../../store/authStore"
+import { SegmentedControl } from "../../components/SegmentedControl"
 import {
   sendFriendRequest, getFriendRequests, acceptFriendRequest, getFriends,
   FriendshipData
 } from "../../services/social"
 import { getWeeklySummary, getMonthlySummary, WeeklySummary, MonthlySummary } from "../../services/tracking"
+import { localDateStr } from "../../utils/date"
 
 export default function ProfileScreen() {
   const { t: i18n } = useTranslation()
@@ -38,13 +39,15 @@ export default function ProfileScreen() {
   useEffect(() => {
     getProfile().then((data) => {
       if (data) {
-        setForm(data)
+        setForm({ ...data, activity_level: data.activity_level ?? "light" })
         setTdee(data.tdee ?? null)
+      } else {
+        setForm(prev => ({ ...prev, activity_level: prev.activity_level ?? "light" }))
       }
-    })
+    }).catch(() => {})
   }, [])
 
-  const todayStr = () => new Date().toISOString().split("T")[0]
+  const todayStr = () => localDateStr()
 
   const loadFriends = useCallback(async () => {
     try {
@@ -63,9 +66,12 @@ export default function ProfileScreen() {
   }, [statsTab])
 
   useEffect(() => {
-    if (profileTab === "friends") loadFriends()
+    if (profileTab === "friends") { loadFriends(); setFriendEmail("") }
+  }, [profileTab, loadFriends])
+
+  useEffect(() => {
     if (profileTab === "stats") loadStats()
-  }, [profileTab, statsTab, loadFriends, loadStats])
+  }, [profileTab, statsTab, loadStats])
 
   async function handleSendFriendRequest() {
     if (!friendEmail.trim()) return
@@ -73,7 +79,12 @@ export default function ProfileScreen() {
       await sendFriendRequest(friendEmail.trim())
       setFriendEmail("")
       Alert.alert("", i18n.social.requestSent)
-    } catch { Alert.alert(i18n.common.error) }
+    } catch (e: any) {
+      const status = e?.response?.status
+      if (status === 404) Alert.alert("", "该用户不存在，请确认邮箱是否正确")
+      else if (status === 409) Alert.alert("", "已经是好友或申请已发送")
+      else Alert.alert(i18n.common.error)
+    }
   }
 
   async function handleAcceptFriend(id: number) {
@@ -105,11 +116,12 @@ export default function ProfileScreen() {
           (err: any) => { err ? reject(err) : resolve() }
         )
       })
-      const today = new Date()
-      const startOfDay = new Date(today.setHours(0, 0, 0, 0)).toISOString()
+      const startOfDay = new Date()
+      startOfDay.setHours(0, 0, 0, 0)
+      const startOfDayStr = startOfDay.toISOString()
       const steps: number = await new Promise((resolve, reject) => {
         AppleHealthKit.getStepCount(
-          { date: startOfDay },
+          { date: startOfDayStr },
           (err: any, results: any) => err ? reject(err) : resolve(results?.value || 0)
         )
       })
@@ -162,27 +174,39 @@ export default function ProfileScreen() {
           {numField(t.age, "age")}
 
           <Text style={styles.label}>{t.gender}</Text>
-          <Picker selectedValue={form.gender} onValueChange={(v) => setForm({ ...form, gender: v })}>
-            <Picker.Item label={t.genders.female} value="female" />
-            <Picker.Item label={t.genders.male} value="male" />
-            <Picker.Item label={t.genders.other} value="other" />
-          </Picker>
+          <SegmentedControl
+            options={[
+              { label: t.genders.female, value: "female" },
+              { label: t.genders.male, value: "male" },
+            ]}
+            value={form.gender ?? "female"}
+            onChange={(v) => setForm({ ...form, gender: v })}
+          />
 
           <Text style={styles.label}>{t.activityLevel}</Text>
-          <Picker selectedValue={form.activity_level ?? "light"} onValueChange={(v) => setForm({ ...form, activity_level: v })}>
-            <Picker.Item label={t.activityLevels.sedentary} value="sedentary" />
-            <Picker.Item label={t.activityLevels.light} value="light" />
-            <Picker.Item label={t.activityLevels.moderate} value="moderate" />
-            <Picker.Item label={t.activityLevels.active} value="active" />
-            <Picker.Item label={t.activityLevels.very_active} value="very_active" />
-          </Picker>
+          <SegmentedControl
+            options={[
+              { label: t.activityLevels.sedentary, value: "sedentary" },
+              { label: t.activityLevels.light, value: "light" },
+              { label: t.activityLevels.moderate, value: "moderate" },
+              { label: t.activityLevels.active, value: "active" },
+              { label: t.activityLevels.very_active, value: "very_active" },
+            ]}
+            value={form.activity_level ?? "light"}
+            onChange={(v) => setForm({ ...form, activity_level: v })}
+            wrap
+          />
 
           <Text style={styles.label}>{t.goal}</Text>
-          <Picker selectedValue={form.goal} onValueChange={(v) => setForm({ ...form, goal: v })}>
-            <Picker.Item label={t.goals.reduce_fat} value="reduce_fat" />
-            <Picker.Item label={t.goals.maintain} value="maintain" />
-            <Picker.Item label={t.goals.gain_muscle} value="gain_muscle" />
-          </Picker>
+          <SegmentedControl
+            options={[
+              { label: t.goals.reduce_fat, value: "reduce_fat" },
+              { label: t.goals.maintain, value: "maintain" },
+              { label: t.goals.gain_muscle, value: "gain_muscle" },
+            ]}
+            value={form.goal ?? "maintain"}
+            onChange={(v) => setForm({ ...form, goal: v })}
+          />
 
           {tdee && (
             <View style={styles.tdeeBox}>

@@ -84,7 +84,9 @@ def add_food_log_from_photo(body: FoodLogPhotoRequest,
     if not check_quota(db, current_user, "food_log_photo"):
         raise HTTPException(status_code=402, detail="Trial limit reached. Please upgrade to Pro.")
     from services.claude_service import analyze_food_photo
-    nutrition = analyze_food_photo(body.image_base64)
+    import logging
+    logging.warning(f"[photo] language={body.language}")
+    nutrition = analyze_food_photo(body.image_base64, body.language)
     items = nutrition.get("items", [])
 
     log = FoodLog(

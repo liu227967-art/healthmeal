@@ -63,7 +63,7 @@ function ShoppingListView() {
       {latest ? (
         <View style={styles.card}>
           <Text style={styles.cardTitle}>{t.shoppingList} — {latest.date}</Text>
-          {latest.items.map((item, i) => {
+          {latest.items?.map((item, i) => {
             const key = `${latest.id}_${item.name}`
             const checked = checkedItems[key] || false
             return (
@@ -87,7 +87,7 @@ function ShoppingListView() {
 function FriendsView() {
   const { t: i18n } = useTranslation()
   const t = i18n.social
-  const { token } = useAuthStore()
+  const { token, email: currentEmail } = useAuthStore()
   const [friends, setFriends] = useState<FriendshipData[]>([])
   const [email, setEmail] = useState("")
   const [sending, setSending] = useState(false)
@@ -184,7 +184,7 @@ function FriendsView() {
         friends.map((f) => (
           <View key={f.id} style={styles.friendRow}>
             <Text style={styles.friendEmail}>
-              {f.requester_email === f.addressee_email ? f.requester_email : (f.addressee_email || f.requester_email)}
+              {currentEmail && f.requester_email === currentEmail ? f.addressee_email : f.requester_email}
             </Text>
             <Text style={styles.acceptedBadge}>{t.accepted}</Text>
           </View>

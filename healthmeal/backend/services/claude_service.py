@@ -251,7 +251,7 @@ def summarize_article(title: str, content: str) -> dict:
     return json.loads(raw[start:end])
 
 
-def analyze_food_photo(image_base64: str) -> dict:
+def analyze_food_photo(image_base64: str, language: str = "zh") -> dict:
     """
     分析食物照片，返回营养信息。
     返回格式：{
@@ -278,6 +278,12 @@ def analyze_food_photo(image_base64: str) -> dict:
                 {
                     "type": "text",
                     "text": (
+                        "Identify the food in the image and estimate the nutritional content and calories for each item. "
+                        "Return JSON only, no other text. Format:\n"
+                        '{"items":[{"name":"food name","calories":number,"protein":number,"fiber":number,"anti_inflammatory":0-10}],'
+                        '"total_calories":number,"total_protein":number,"total_fiber":number,'
+                        '"anti_inflammatory_score":0-10,"organs":["beneficial organs"]}'
+                    ) if language == "en" else (
                         "请识别图片中的食物，估算每种食物的营养成分和热量。"
                         "只返回 JSON，不输出其他文字。格式：\n"
                         '{"items":[{"name":"食物名","calories":数字,"protein":数字,"fiber":数字,"anti_inflammatory":0-10评分}],'

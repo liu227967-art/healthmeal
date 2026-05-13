@@ -9,8 +9,8 @@ import {
   identifyIngredientsFromPhoto, IngredientData
 } from "../../services/meal"
 import { useTranslation } from "../../hooks/useTranslation"
+import { localDateStr as todayStr } from "../../utils/date"
 
-const todayStr = () => new Date().toISOString().split("T")[0]
 const UNITS = ["g", "ml", "个", "片"]
 const UNIT_LABELS: Record<string, Record<string, string>> = {
   zh: { g: "g", ml: "ml", "个": "个", "片": "片" },

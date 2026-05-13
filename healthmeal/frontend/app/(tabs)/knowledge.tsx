@@ -31,6 +31,7 @@ function ContentCard({
     : (item.summary_zh || item.summary_en || "")
 
   async function handleOpen() {
+    if (!item.url) return
     await WebBrowser.openBrowserAsync(item.url)
   }
 
@@ -50,7 +51,7 @@ function ContentCard({
         <Text style={styles.summary} numberOfLines={3}>{summary}</Text>
       )}
 
-      {item.tags.length > 0 && (
+      {item.tags?.length > 0 && (
         <View style={styles.tagsRow}>
           {item.tags.slice(0, 4).map((tag) => (
             <View key={tag} style={styles.tag}>
@@ -61,9 +62,11 @@ function ContentCard({
       )}
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.actionBtn} onPress={handleOpen}>
-          <Text style={styles.actionText}>{isVideo ? t.watchVideo : t.readMore}</Text>
-        </TouchableOpacity>
+        {!isNote && item.url ? (
+          <TouchableOpacity style={[styles.actionBtn, styles.readMoreBtn]} onPress={handleOpen} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
+            <Text style={[styles.actionText, styles.readMoreText]}>{isVideo ? t.watchVideo : t.readMore} →</Text>
+          </TouchableOpacity>
+        ) : null}
 
         <TouchableOpacity
           style={[styles.actionBtn, item.is_bookmarked ? styles.bookmarkedBtn : styles.bookmarkBtn]}
@@ -283,7 +286,10 @@ export default function KnowledgeScreen() {
               <TouchableOpacity style={styles.saveBtn} onPress={handleSaveNote} disabled={savingNote}>
                 <Text style={styles.saveBtnText}>{savingNote ? t.saving : t.save}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowNoteModal(false)}>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => {
+                setNoteTitle(""); setNoteContent(""); setNoteLang("zh")
+                setShowNoteModal(false)
+              }}>
                 <Text style={styles.cancelBtnText}>{i18n.common.cancel}</Text>
               </TouchableOpacity>
             </View>
@@ -325,6 +331,8 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   actionBtn: { paddingHorizontal: 10, paddingVertical: 7, borderRadius: 8, borderWidth: 1, borderColor: "#e8f0e8" },
   actionText: { fontSize: 12, color: "#1a1a1a" },
+  readMoreBtn: { borderColor: "#16a34a", backgroundColor: "#f0fdf4", paddingHorizontal: 14, paddingVertical: 9 },
+  readMoreText: { color: "#16a34a", fontWeight: "600" },
   bookmarkBtn: { borderColor: "#e8f0e8" },
   bookmarkedBtn: { borderColor: "#16a34a", backgroundColor: "#f0fdf4" },
   bookmarkedText: { color: "#16a34a" },

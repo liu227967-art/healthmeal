@@ -82,8 +82,8 @@ export async function addFoodLog(data: {
   return res.data
 }
 
-export async function addFoodLogFromPhoto(meal_type: string, image_base64: string, date: string): Promise<FoodLogData> {
-  const res = await api.post("/food-logs/photo", { meal_type, image_base64, date })
+export async function addFoodLogFromPhoto(meal_type: string, image_base64: string, date: string, language = "zh"): Promise<FoodLogData> {
+  const res = await api.post("/food-logs/photo", { meal_type, image_base64, date, language })
   return res.data
 }
 

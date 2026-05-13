@@ -35,6 +35,7 @@ class FoodLogPhotoRequest(BaseModel):
     meal_type: str
     image_base64: str
     date: str                        # YYYY-MM-DD
+    language: str = "zh"
 
 
 class FoodLogResponse(BaseModel):

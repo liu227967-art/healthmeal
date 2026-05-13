@@ -4,7 +4,6 @@ import {
   TextInput, StyleSheet, Alert, ActivityIndicator, Modal,
   KeyboardAvoidingView, Platform, Keyboard
 } from "react-native"
-import { Picker } from "@react-native-picker/picker"
 import * as ImagePicker from "expo-image-picker"
 import { useLocalSearchParams, useFocusEffect } from "expo-router"
 import {
@@ -18,6 +17,7 @@ import {
   IngredientData
 } from "../../services/meal"
 import { localDateStr as todayStr } from "../../utils/date"
+import { SegmentedControl } from "../../components/SegmentedControl"
 
 function ProgressBar({ value, target, color = "#16a34a" }: { value: number; target: number; color?: string }) {
   const pct = Math.min((value / (target || 1)) * 100, 100)
@@ -214,7 +214,7 @@ export default function TrackingScreen() {
     try {
       for (const asset of result.assets) {
         if (asset.base64) {
-          await addFoodLogFromPhoto(mealType, asset.base64, todayStr())
+          await addFoodLogFromPhoto(mealType, asset.base64, todayStr(), language)
         }
       }
     } catch {
@@ -331,7 +331,7 @@ export default function TrackingScreen() {
                 {weeklySummary.daily_calories.map((d) => (
                   <View key={d.date} style={{ marginBottom: 8 }}>
                     <View style={styles.dayRow}>
-                      <Text style={styles.dayLabel}>{d.date.slice(5)}</Text>
+                      <Text style={styles.dayLabel}>{d.date.slice(8)}</Text>
                       <View style={{ flex: 1, marginHorizontal: 8 }}>
                         <ProgressBar value={d.calories} target={2000} />
                       </View>
@@ -577,24 +577,24 @@ export default function TrackingScreen() {
               <Text style={styles.label}>{t.foodName}</Text>
               <TextInput style={styles.input} placeholder={t.foodName} value={foodName} onChangeText={setFoodName} returnKeyType="next" />
               <Text style={styles.label}>{t.quantity}</Text>
-              <View style={{ flexDirection: "row", gap: 8, marginBottom: 12 }}>
-                <TextInput
-                  style={[styles.input, { flex: 2, marginBottom: 0 }]}
-                  placeholder={t.quantity}
-                  value={quantity}
-                  onChangeText={setQuantity}
-                  keyboardType="numeric"
-                  returnKeyType="next"
-                />
-                <View style={[styles.input, { flex: 1, marginBottom: 0, padding: 0, justifyContent: "center" }]}>
-                  <Picker selectedValue={unit} onValueChange={setUnit} style={{ height: 48 }}>
-                    <Picker.Item label="g" value="g" />
-                    <Picker.Item label="ml" value="ml" />
-                    <Picker.Item label={i18n.ingredients.units.piece} value="个" />
-                    <Picker.Item label={i18n.ingredients.units.slice} value="片" />
-                  </Picker>
-                </View>
-              </View>
+              <TextInput
+                style={[styles.input, { marginBottom: 8 }]}
+                placeholder={t.quantity}
+                value={quantity}
+                onChangeText={setQuantity}
+                keyboardType="numeric"
+                returnKeyType="next"
+              />
+              <SegmentedControl
+                options={[
+                  { label: "g", value: "g" },
+                  { label: "ml", value: "ml" },
+                  { label: i18n.ingredients.units.piece, value: "个" },
+                  { label: i18n.ingredients.units.slice, value: "片" },
+                ]}
+                value={unit}
+                onChange={setUnit}
+              />
               <TouchableOpacity
                 style={[styles.addBtn, { backgroundColor: "#8b5cf6", marginBottom: 12 }, estimating && { backgroundColor: "#c4b5fd" }]}
                 onPress={handleAIEstimate}
@@ -655,8 +655,8 @@ const styles = StyleSheet.create({
   foodItem: { fontSize: 14, color: "#1a1a1a", marginBottom: 2 },
   logTotal: { fontSize: 13, color: "#6b7280", marginTop: 6, fontStyle: "italic" },
   dayRow: { flexDirection: "row", alignItems: "center", marginBottom: 8 },
-  dayLabel: { width: 40, fontSize: 13, color: "#6b7280" },
-  dayValue: { width: 40, fontSize: 13, color: "#1a1a1a", textAlign: "right" },
+  dayLabel: { width: 48, fontSize: 13, color: "#6b7280" },
+  dayValue: { width: 48, fontSize: 13, color: "#1a1a1a", textAlign: "right" },
   overlay: { position: "absolute", top: 0, left: 0, right: 0, bottom: 0, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" },
   overlayText: { color: "#fff", marginTop: 12, fontSize: 15 },
   fab: { width: 56, height: 56, borderRadius: 28, backgroundColor: "#16a34a", justifyContent: "center", alignItems: "center", shadowColor: "#000", shadowOpacity: 0.2, shadowRadius: 8, elevation: 6 },
