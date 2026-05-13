@@ -38,7 +38,8 @@ def calculate_tdee(profile: Profile) -> Optional[float]:
         tdee = tdee * 0.85
     elif profile.goal == "gain_muscle":
         tdee = tdee + 300
-    return round(tdee, 1)
+    min_calories = 1500.0 if profile.gender == "male" else 1200.0
+    return round(max(tdee, min_calories), 1)
 
 
 @router.get("", response_model=Optional[ProfileResponse])
