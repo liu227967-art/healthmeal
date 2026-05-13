@@ -324,17 +324,24 @@ export default function TrackingScreen() {
                 <Text style={styles.statLine}>{t.avgProtein}：<Text style={styles.bold}>{weeklySummary.avg_protein}g/{i18n.common.perDay}</Text></Text>
                 <Text style={styles.statLine}>{t.avgFiber}：<Text style={styles.bold}>{weeklySummary.avg_fiber}g/{i18n.common.perDay}</Text></Text>
                 <Text style={styles.statLine}>{t.avgAnti}：<Text style={styles.bold}>{weeklySummary.avg_anti_inflammatory}/10</Text></Text>
-                <Text style={styles.statLine}>{t.totalExercise}：<Text style={styles.bold}>{weeklySummary.total_exercise_calories}kcal</Text></Text>
+                <Text style={styles.statLine}>{t.totalExercise}：<Text style={styles.bold}>{weeklySummary.total_exercise_calories.toFixed(1)}kcal</Text></Text>
               </View>
               <View style={styles.statsCard}>
                 <Text style={styles.cardTitle}>{t.dailyCalories}</Text>
                 {weeklySummary.daily_calories.map((d) => (
-                  <View key={d.date} style={styles.dayRow}>
-                    <Text style={styles.dayLabel}>{d.date.slice(5)}</Text>
-                    <View style={{ flex: 1, marginHorizontal: 8 }}>
-                      <ProgressBar value={d.calories} target={2000} />
+                  <View key={d.date} style={{ marginBottom: 8 }}>
+                    <View style={styles.dayRow}>
+                      <Text style={styles.dayLabel}>{d.date.slice(5)}</Text>
+                      <View style={{ flex: 1, marginHorizontal: 8 }}>
+                        <ProgressBar value={d.calories} target={2000} />
+                      </View>
+                      <Text style={styles.dayValue}>{d.calories.toFixed(0)}</Text>
                     </View>
-                    <Text style={styles.dayValue}>{d.calories.toFixed(0)}</Text>
+                    {d.exercise > 0 && (
+                      <View style={{ flexDirection: "row", alignItems: "center", paddingLeft: 40 }}>
+                        <Text style={{ fontSize: 11, color: "#3b82f6" }}>🏃 -{d.exercise.toFixed(0)} kcal</Text>
+                      </View>
+                    )}
                   </View>
                 ))}
               </View>
