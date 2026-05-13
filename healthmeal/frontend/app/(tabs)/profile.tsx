@@ -223,7 +223,7 @@ export default function ProfileScreen() {
           {tdee && (
             <View style={styles.tdeeBox}>
               <Text style={styles.tdeeLabel}>{t.tdee}</Text>
-              <Text style={styles.tdeeValue}>{tdee} kcal/{i18n.common.perDay}</Text>
+              <Text style={styles.tdeeValue}>{Math.round(tdee)} kcal/{i18n.common.perDay}</Text>
             </View>
           )}
 
