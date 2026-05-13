@@ -265,14 +265,14 @@ export default function TrackingScreen() {
             <View>
               <View style={styles.statsCard}>
                 <Text style={styles.cardTitle}>{t.todayNutrition}</Text>
-                <Text style={styles.statLine}>{t.totalCalories}：<Text style={styles.bold}>{dailySummary.total_calories}</Text> / {dailySummary.target_calories?.toFixed(0)} kcal</Text>
+                <Text style={styles.statLine}>{t.totalCalories}：<Text style={styles.bold}>{Math.round(dailySummary.total_calories)}</Text> / {Math.round(dailySummary.target_calories ?? 2000)} kcal</Text>
                 <ProgressBar value={dailySummary.total_calories} target={dailySummary.target_calories || 2000} />
                 <Text style={styles.statLine}>{t.totalProtein}：<Text style={styles.bold}>{dailySummary.total_protein}g</Text> / {dailySummary.target_protein?.toFixed(0)}g</Text>
                 <ProgressBar value={dailySummary.total_protein} target={dailySummary.target_protein || 100} color="#3b82f6" />
                 <Text style={styles.statLine}>{t.totalFiber}：<Text style={styles.bold}>{dailySummary.total_fiber}g</Text> / 30g</Text>
                 <ProgressBar value={dailySummary.total_fiber} target={30} color="#f59e0b" />
                 <Text style={styles.statLine}>{t.antiInflammatory}：<Text style={styles.bold}>{dailySummary.anti_inflammatory_score}/10</Text></Text>
-                <Text style={styles.statLine}>{t.exerciseBurned}：<Text style={styles.bold}>{dailySummary.exercise_calories_burned} kcal</Text></Text>
+                <Text style={styles.statLine}>{t.exerciseBurned}：<Text style={styles.bold}>{Math.round(dailySummary.exercise_calories_burned)} kcal</Text></Text>
               </View>
               {dailySummary.logs.length === 0 ? (
                 <Text style={styles.empty}>{t.noLogs}</Text>
@@ -324,7 +324,7 @@ export default function TrackingScreen() {
                 <Text style={styles.statLine}>{t.avgProtein}：<Text style={styles.bold}>{weeklySummary.avg_protein}g/{i18n.common.perDay}</Text></Text>
                 <Text style={styles.statLine}>{t.avgFiber}：<Text style={styles.bold}>{weeklySummary.avg_fiber}g/{i18n.common.perDay}</Text></Text>
                 <Text style={styles.statLine}>{t.avgAnti}：<Text style={styles.bold}>{weeklySummary.avg_anti_inflammatory}/10</Text></Text>
-                <Text style={styles.statLine}>{t.totalExercise}：<Text style={styles.bold}>{weeklySummary.total_exercise_calories.toFixed(1)}kcal</Text></Text>
+                <Text style={styles.statLine}>{t.totalExercise}：<Text style={styles.bold}>{Math.round(weeklySummary.total_exercise_calories)} kcal</Text></Text>
               </View>
               <View style={styles.statsCard}>
                 <Text style={styles.cardTitle}>{t.dailyCalories}</Text>
