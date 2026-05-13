@@ -482,7 +482,7 @@ export default function TrackingScreen() {
                       <TouchableOpacity key={a}
                         style={[styles.mealTypeBtn, exerciseActivity === a && styles.mealTypeBtnActive]}
                         onPress={() => setExerciseActivity(a)}>
-                        <Text style={[styles.mealTypeTxt, exerciseActivity === a && styles.mealTypeTxtActive]}>
+                        <Text style={[styles.mealTypeTxt, exerciseActivity === a && styles.mealTypeTxtActive]} numberOfLines={1} adjustsFontSizeToFit>
                           {te[a]}
                         </Text>
                       </TouchableOpacity>
@@ -496,7 +496,7 @@ export default function TrackingScreen() {
                       <TouchableOpacity key={i}
                         style={[styles.mealTypeBtn, exerciseIntensity === i && styles.mealTypeBtnActive]}
                         onPress={() => setExerciseIntensity(i)}>
-                        <Text style={[styles.mealTypeTxt, exerciseIntensity === i && styles.mealTypeTxtActive]}>
+                        <Text style={[styles.mealTypeTxt, exerciseIntensity === i && styles.mealTypeTxtActive]} numberOfLines={1} adjustsFontSizeToFit>
                           {te[i]}
                         </Text>
                       </TouchableOpacity>
@@ -511,7 +511,7 @@ export default function TrackingScreen() {
                       <TouchableOpacity key={key}
                         style={[styles.mealTypeBtn, strengthExercise === key && styles.mealTypeBtnActive]}
                         onPress={() => setStrengthExercise(key)}>
-                        <Text style={[styles.mealTypeTxt, strengthExercise === key && styles.mealTypeTxtActive]}>{te[key]}</Text>
+                        <Text style={[styles.mealTypeTxt, strengthExercise === key && styles.mealTypeTxtActive]} numberOfLines={1} adjustsFontSizeToFit>{te[key]}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>
@@ -520,7 +520,7 @@ export default function TrackingScreen() {
                       <TouchableOpacity key={key}
                         style={[styles.mealTypeBtn, strengthExercise === key && styles.mealTypeBtnActive]}
                         onPress={() => setStrengthExercise(key)}>
-                        <Text style={[styles.mealTypeTxt, strengthExercise === key && styles.mealTypeTxtActive]}>{te[key]}</Text>
+                        <Text style={[styles.mealTypeTxt, strengthExercise === key && styles.mealTypeTxtActive]} numberOfLines={1} adjustsFontSizeToFit>{te[key]}</Text>
                       </TouchableOpacity>
                     ))}
                   </View>

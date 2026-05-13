@@ -254,7 +254,7 @@ export default function MealScreen() {
             style={[styles.styleBtn, style === key && styles.styleBtnActive]}
             onPress={() => setStyle(key)}
           >
-            <Text style={[styles.styleBtnText, style === key && styles.styleBtnTextActive]}>{label}</Text>
+            <Text style={[styles.styleBtnText, style === key && styles.styleBtnTextActive]} numberOfLines={1} adjustsFontSizeToFit>{label}</Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   tagRemove: { paddingLeft: 2 },
   tagRemoveText: { fontSize: 16, color: "#6b7280", lineHeight: 18 },
   styleGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginBottom: 12 },
-  styleBtn: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 20, borderWidth: 1, borderColor: "#e8f0e8", backgroundColor: "#f2f7f2" },
+  styleBtn: { width: "30%", paddingVertical: 8, paddingHorizontal: 4, borderRadius: 20, borderWidth: 1, borderColor: "#e8f0e8", backgroundColor: "#f2f7f2", alignItems: "center" },
   styleBtnActive: { backgroundColor: "#16a34a", borderColor: "#16a34a" },
   styleBtnText: { fontSize: 13, color: "#1a1a1a" },
   styleBtnTextActive: { color: "#fff", fontWeight: "600" },
