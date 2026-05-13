@@ -82,8 +82,8 @@ export async function addFoodLog(data: {
   return res.data
 }
 
-export async function addFoodLogFromPhoto(meal_type: string, image_base64: string): Promise<FoodLogData> {
-  const res = await api.post("/food-logs/photo", { meal_type, image_base64 })
+export async function addFoodLogFromPhoto(meal_type: string, image_base64: string, date: string): Promise<FoodLogData> {
+  const res = await api.post("/food-logs/photo", { meal_type, image_base64, date })
   return res.data
 }
 
@@ -109,6 +109,7 @@ export async function getBodyMetrics(): Promise<BodyMetricData[]> {
 export async function logExercise(data: {
   type: "cardio" | "strength"
   detail: Record<string, any>
+  date: string
 }): Promise<{ id: number; calories_burned: number }> {
   const res = await api.post("/exercise-logs", data)
   return res.data

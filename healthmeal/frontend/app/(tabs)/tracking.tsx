@@ -6,7 +6,7 @@ import {
 } from "react-native"
 import { Picker } from "@react-native-picker/picker"
 import * as ImagePicker from "expo-image-picker"
-import { useLocalSearchParams } from "expo-router"
+import { useLocalSearchParams, useFocusEffect } from "expo-router"
 import {
   addFoodLog, addFoodLogFromPhoto, getDailySummary,
   getWeeklySummary, getMonthlySummary, logExercise, estimateNutrition,
@@ -17,8 +17,7 @@ import {
   getIngredients, addIngredient, deleteIngredient,
   IngredientData
 } from "../../services/meal"
-
-const todayStr = () => new Date().toISOString().split("T")[0]
+import { localDateStr as todayStr } from "../../utils/date"
 
 function ProgressBar({ value, target, color = "#16a34a" }: { value: number; target: number; color?: string }) {
   const pct = Math.min((value / (target || 1)) * 100, 100)
@@ -96,7 +95,7 @@ export default function TrackingScreen() {
     }
   }, [tab])
 
-  useEffect(() => { loadData() }, [loadData])
+  useFocusEffect(useCallback(() => { loadData() }, [loadData]))
 
   // 切换到运动 tab 时确保 daily 数据已加载（运动消耗来自 dailySummary）
   useEffect(() => {
@@ -111,7 +110,7 @@ export default function TrackingScreen() {
     }
   }, [])
 
-  useEffect(() => { loadIngredients() }, [loadIngredients])
+  useFocusEffect(useCallback(() => { loadIngredients() }, [loadIngredients]))
 
   async function handleAddIngredient() {
     if (!ingName.trim()) return
@@ -128,7 +127,7 @@ export default function TrackingScreen() {
   }
 
   async function handleAddManual() {
-    if (!foodName.trim()) { Alert.alert(t.foodName); return }
+    if (!foodName.trim()) { Alert.alert(i18n.common.error, t.foodName); return }
     const foodNameWithQty = quantity && unit ? `${foodName.trim()} (${quantity}${unit})` : foodName.trim()
     try {
       await addFoodLog({
@@ -153,7 +152,7 @@ export default function TrackingScreen() {
   }
 
   async function handleAIEstimate() {
-    if (!foodName.trim()) { Alert.alert(t.foodName); return }
+    if (!foodName.trim()) { Alert.alert(i18n.common.error, t.foodName); return }
     setEstimating(true)
     try {
       const result = await estimateNutrition(foodName.trim(), parseFloat(quantity) || 100, unit)
@@ -176,10 +175,12 @@ export default function TrackingScreen() {
       ? { activity: exerciseActivity, duration_min: parseFloat(exerciseDuration) || 0, intensity: exerciseIntensity }
       : { exercise: strengthExercise === "custom" ? (customExercise.trim() || te.custom) : strengthExercise, sets: parseFloat(exerciseSets) || 0, reps: parseFloat(exerciseReps) || 0, weight_kg: parseFloat(exerciseWeight) || 0 }
     try {
-      const res = await logExercise({ type: exerciseType, detail })
+      const res = await logExercise({ type: exerciseType, detail, date: todayStr() })
       setShowExerciseModal(false)
       setExerciseDuration(""); setExerciseSets(""); setExerciseReps(""); setExerciseWeight("")
-      await loadData()
+      // 运动 tab 依赖 dailySummary 显示消耗，无论当前 food sub-tab 是哪个都要刷新
+      const [, fresh] = await Promise.all([loadData(), getDailySummary(todayStr())])
+      setDailySummary(fresh)
       Alert.alert("", `${te.successMsg} ${res.calories_burned} ${te.kcal}`)
     } catch {
       Alert.alert(i18n.common.error)
@@ -196,7 +197,7 @@ export default function TrackingScreen() {
     try {
       for (const asset of result.assets) {
         if (asset.base64) {
-          await addFoodLogFromPhoto(mealType, asset.base64)
+          await addFoodLogFromPhoto(mealType, asset.base64, todayStr())
         }
       }
     } catch {
@@ -512,7 +513,13 @@ export default function TrackingScreen() {
                 <Text style={styles.addBtnText}>{te.log}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.addBtn, { backgroundColor: "#9ca3af", marginTop: 8 }]}
-                onPress={() => { Keyboard.dismiss(); setShowExerciseModal(false) }}>
+                onPress={() => {
+                  Keyboard.dismiss()
+                  setShowExerciseModal(false)
+                  setExerciseDuration(""); setExerciseSets(""); setExerciseReps(""); setExerciseWeight("")
+                  setCustomExercise(""); setExerciseType("cardio"); setExerciseActivity("walking")
+                  setStrengthExercise("squat"); setExerciseIntensity("moderate")
+                }}>
                 <Text style={styles.addBtnText}>{i18n.common.cancel}</Text>
               </TouchableOpacity>
             </ScrollView>
@@ -582,7 +589,12 @@ export default function TrackingScreen() {
                 <Text style={styles.addBtnText}>{t.addPhoto}</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.addBtn, { backgroundColor: "#9ca3af", marginTop: 8 }]}
-                onPress={() => { Keyboard.dismiss(); setShowAddModal(false) }}>
+                onPress={() => {
+                  Keyboard.dismiss()
+                  setShowAddModal(false)
+                  setFoodName(""); setQuantity("100"); setUnit("g")
+                  setCalories(""); setProtein(""); setFiber("")
+                }}>
                 <Text style={styles.addBtnText}>{i18n.common.cancel}</Text>
               </TouchableOpacity>
             </ScrollView>
