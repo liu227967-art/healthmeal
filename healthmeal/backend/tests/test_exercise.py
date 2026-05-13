@@ -40,7 +40,8 @@ def test_log_cardio():
     token = get_token()
     res = client.post("/exercise-logs", headers={"Authorization": f"Bearer {token}"}, json={
         "type": "cardio",
-        "detail": {"activity": "running", "duration_min": 30, "intensity": "moderate"}
+        "detail": {"activity": "running", "duration_min": 30, "intensity": "moderate"},
+        "date": "2026-05-11"
     })
     assert res.status_code == 201
     assert res.json()["calories_burned"] > 0
@@ -50,17 +51,21 @@ def test_log_strength():
     token = get_token()
     res = client.post("/exercise-logs", headers={"Authorization": f"Bearer {token}"}, json={
         "type": "strength",
-        "detail": {"muscle_group": "chest", "sets": 4, "weight_kg": 60}
+        "detail": {"muscle_group": "chest", "sets": 4, "weight_kg": 60},
+        "date": "2026-05-11"
     })
     assert res.status_code == 201
     assert res.json()["calories_burned"] > 0
 
 
 def test_get_today_logs():
+    from datetime import date as date_cls
+    today = date_cls.today().isoformat()
     token = get_token()
     client.post("/exercise-logs", headers={"Authorization": f"Bearer {token}"}, json={
         "type": "cardio",
-        "detail": {"activity": "cycling", "duration_min": 45, "intensity": "low"}
+        "detail": {"activity": "cycling", "duration_min": 45, "intensity": "low"},
+        "date": today
     })
     res = client.get("/exercise-logs/today", headers={"Authorization": f"Bearer {token}"})
     assert res.status_code == 200

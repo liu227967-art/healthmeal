@@ -34,19 +34,23 @@ def log_exercise(body: ExerciseLogRequest, current_user: User = Depends(get_curr
     calories = estimate_calories(body.type, body.detail)
     log = ExerciseLog(user_id=current_user.id, type=body.type,
                       detail_json=json.dumps(body.detail, ensure_ascii=False),
-                      calories_burned=calories)
+                      calories_burned=calories, date=body.date)
     db.add(log)
     db.commit()
     db.refresh(log)
     return ExerciseLogResponse(id=log.id, type=log.type, detail=body.detail,
-                               calories_burned=log.calories_burned, logged_at=log.logged_at)
+                               calories_burned=log.calories_burned, date=log.date,
+                               logged_at=log.logged_at)
 
 
 @router.get("/today", response_model=List[ExerciseLogResponse])
 def get_today_logs(current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     today = date.today()
-    all_logs = db.query(ExerciseLog).filter(ExerciseLog.user_id == current_user.id).all()
-    today_logs = [l for l in all_logs if l.logged_at and l.logged_at.date() == today]
+    today_str = today.isoformat()
+    today_logs = db.query(ExerciseLog).filter(
+        ExerciseLog.user_id == current_user.id,
+        ExerciseLog.date == today_str
+    ).all()
     return [ExerciseLogResponse(id=l.id, type=l.type, detail=json.loads(l.detail_json),
-                                calories_burned=l.calories_burned, logged_at=l.logged_at)
+                                calories_burned=l.calories_burned, date=l.date, logged_at=l.logged_at)
             for l in today_logs]

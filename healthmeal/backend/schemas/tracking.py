@@ -34,6 +34,7 @@ class FoodLogRequest(BaseModel):
 class FoodLogPhotoRequest(BaseModel):
     meal_type: str
     image_base64: str
+    date: str                        # YYYY-MM-DD
 
 
 class FoodLogResponse(BaseModel):

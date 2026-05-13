@@ -6,6 +6,7 @@ from datetime import datetime
 class ExerciseLogRequest(BaseModel):
     type: str   # cardio / strength
     detail: dict[str, Any]
+    date: str   # YYYY-MM-DD
 
 
 class ExerciseLogResponse(BaseModel):
@@ -13,6 +14,7 @@ class ExerciseLogResponse(BaseModel):
     type: str
     detail: dict[str, Any]
     calories_burned: float
+    date: str
     logged_at: datetime
 
     class Config:

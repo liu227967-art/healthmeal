@@ -84,7 +84,6 @@ def add_food_log_from_photo(body: FoodLogPhotoRequest,
     if not check_quota(db, current_user, "food_log_photo"):
         raise HTTPException(status_code=402, detail="Trial limit reached. Please upgrade to Pro.")
     from services.claude_service import analyze_food_photo
-    today = date.today().isoformat()
     nutrition = analyze_food_photo(body.image_base64)
     items = nutrition.get("items", [])
 
@@ -92,7 +91,7 @@ def add_food_log_from_photo(body: FoodLogPhotoRequest,
         user_id=current_user.id,
         meal_type=body.meal_type,
         input_method="photo",
-        date=today,
+        date=body.date,
         food_items_json=json.dumps(items, ensure_ascii=False),
         total_calories=nutrition.get("total_calories", 0.0),
         total_protein=nutrition.get("total_protein", 0.0),
@@ -168,9 +167,11 @@ def get_health_summary(period: str = "daily",
             FoodLog.date == target_date
         ).order_by(FoodLog.logged_at).all()
 
-        all_exercise = db.query(ExerciseLog).filter(ExerciseLog.user_id == current_user.id).all()
-        today_ex = [l for l in all_exercise if l.logged_at and str(l.logged_at.date()) == target_date]
-        exercise_cal = sum(l.calories_burned for l in today_ex)
+        all_exercise = db.query(ExerciseLog).filter(
+            ExerciseLog.user_id == current_user.id,
+            ExerciseLog.date == target_date
+        ).all()
+        exercise_cal = sum(l.calories_burned for l in all_exercise)
 
         total_cal = sum(l.total_calories for l in logs)
         total_pro = sum(l.total_protein for l in logs)
@@ -201,7 +202,10 @@ def get_health_summary(period: str = "daily",
         daily_data = []
         total_protein_sum = total_fiber_sum = anti_sum = ex_total = 0.0
         days_with_data = 0
-        all_exercise = db.query(ExerciseLog).filter(ExerciseLog.user_id == current_user.id).all()
+        all_exercise = db.query(ExerciseLog).filter(
+            ExerciseLog.user_id == current_user.id,
+            ExerciseLog.date.in_(dates)
+        ).all()
 
         for d in dates:
             logs = db.query(FoodLog).filter(FoodLog.user_id == current_user.id, FoodLog.date == d).all()
@@ -209,7 +213,7 @@ def get_health_summary(period: str = "daily",
             day_pro = sum(l.total_protein for l in logs)
             day_fib = sum(l.total_fiber for l in logs)
             day_anti = sum(l.anti_inflammatory_score for l in logs) / len(logs) if logs else 0.0
-            day_ex = sum(l.calories_burned for l in all_exercise if l.logged_at and str(l.logged_at.date()) == d)
+            day_ex = sum(l.calories_burned for l in all_exercise if l.date == d)
             ex_total += day_ex
             if logs:
                 days_with_data += 1

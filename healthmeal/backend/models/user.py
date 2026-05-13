@@ -50,6 +50,7 @@ class ExerciseLog(Base):
     type = Column(String, nullable=False)   # cardio/strength
     detail_json = Column(Text, nullable=False)  # JSON: activity, duration_min, intensity / muscle_group, sets, weight_kg
     calories_burned = Column(Float, default=0.0)
+    date = Column(String, nullable=False, index=True)  # YYYY-MM-DD, 用户本地时区
     logged_at = Column(DateTime(timezone=True), server_default=func.now())
 
     user = relationship("User", back_populates="exercise_logs")

@@ -95,12 +95,13 @@ def generate_meal_plan_endpoint(body: MealPlanRequest,
             "tdee": calculate_tdee(profile_obj) or 2000
         }
 
-    today_date = date_cls.today()
-    all_logs = db.query(ExerciseLog).filter(ExerciseLog.user_id == current_user.id).all()
-    today_logs = [l for l in all_logs if l.logged_at and l.logged_at.date() == today_date]
+    today_str = body.date or date_cls.today().isoformat()
+    today_logs = db.query(ExerciseLog).filter(
+        ExerciseLog.user_id == current_user.id,
+        ExerciseLog.date == today_str
+    ).all()
     exercise_calories = sum(l.calories_burned for l in today_logs)
 
-    today_str = body.date or date_cls.today().isoformat()
     today_ingredients = db.query(Ingredient).filter(
         Ingredient.user_id == current_user.id,
         Ingredient.date == today_str

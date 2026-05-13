@@ -37,7 +37,7 @@ def test_create_exercise_log(db):
     db.commit()
     log = ExerciseLog(user_id=user.id, type="cardio",
                       detail_json='{"activity":"running","duration_min":30,"intensity":"moderate"}',
-                      calories_burned=250.0)
+                      calories_burned=250.0, date="2026-05-11")
     db.add(log)
     db.commit()
     assert db.query(ExerciseLog).filter_by(user_id=user.id).first().calories_burned == 250.0
