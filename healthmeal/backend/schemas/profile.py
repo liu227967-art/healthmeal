@@ -1,12 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List
 
 
 class ProfileRequest(BaseModel):
-    height: Optional[float] = None
-    weight: Optional[float] = None
-    body_fat_pct: Optional[float] = None
-    age: Optional[int] = None
+    height: Optional[float] = Field(None, ge=50, le=300)
+    weight: Optional[float] = Field(None, ge=20, le=500)
+    body_fat_pct: Optional[float] = Field(None, ge=1, le=70)
+    age: Optional[int] = Field(None, ge=1, le=120)
     gender: Optional[str] = None
     goal: Optional[str] = None
     activity_level: Optional[str] = None   # sedentary/light/moderate/active/very_active

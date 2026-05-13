@@ -93,6 +93,18 @@ export default function ProfileScreen() {
   }
 
   async function handleSave() {
+    if (form.height !== undefined && (form.height < 50 || form.height > 300)) {
+      Alert.alert(i18n.common.error, t.invalidHeight); return
+    }
+    if (form.weight !== undefined && (form.weight < 20 || form.weight > 500)) {
+      Alert.alert(i18n.common.error, t.invalidWeight); return
+    }
+    if (form.body_fat_pct !== undefined && (form.body_fat_pct < 1 || form.body_fat_pct > 70)) {
+      Alert.alert(i18n.common.error, t.invalidBodyFat); return
+    }
+    if (form.age !== undefined && (form.age < 1 || form.age > 120)) {
+      Alert.alert(i18n.common.error, t.invalidAge); return
+    }
     try {
       const updated = await updateProfile(form)
       setTdee(updated.tdee ?? null)

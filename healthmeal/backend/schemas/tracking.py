@@ -1,11 +1,11 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import Optional, List, Any
 from datetime import datetime
 
 
 class NutritionEstimateRequest(BaseModel):
     name: str
-    quantity: float
+    quantity: float = Field(..., gt=0, le=10000)
     unit: str
 
 
@@ -18,10 +18,10 @@ class NutritionEstimateResponse(BaseModel):
 
 class FoodItemInput(BaseModel):
     name: str
-    calories: float
-    protein: float
-    fiber: float
-    anti_inflammatory: float = 5.0
+    calories: float = Field(..., ge=0, le=10000)
+    protein: float = Field(..., ge=0, le=1000)
+    fiber: float = Field(..., ge=0, le=500)
+    anti_inflammatory: float = Field(5.0, ge=0, le=10)
 
 
 class FoodLogRequest(BaseModel):
@@ -56,8 +56,8 @@ class FoodLogResponse(BaseModel):
 
 class BodyMetricRequest(BaseModel):
     date: str
-    weight: Optional[float] = None
-    body_fat_pct: Optional[float] = None
+    weight: Optional[float] = Field(None, ge=20, le=500)
+    body_fat_pct: Optional[float] = Field(None, ge=1, le=70)
 
 
 class BodyMetricResponse(BaseModel):

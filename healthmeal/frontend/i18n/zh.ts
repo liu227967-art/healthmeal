@@ -21,6 +21,10 @@ export const zh = {
     goal: "目标",
     allergies: "过敏食物",
     save: "保存",
+    invalidHeight: "身高请输入 50–300 cm",
+    invalidWeight: "体重请输入 20–500 kg",
+    invalidBodyFat: "体脂率请输入 1–70%",
+    invalidAge: "年龄请输入 1–120",
     goals: {
       reduce_fat: "减脂",
       maintain: "维持",

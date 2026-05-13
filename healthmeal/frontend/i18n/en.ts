@@ -21,6 +21,10 @@ export const en = {
     goal: "Goal",
     allergies: "Food Allergies",
     save: "Save",
+    invalidHeight: "Height must be 50–300 cm",
+    invalidWeight: "Weight must be 20–500 kg",
+    invalidBodyFat: "Body fat must be 1–70%",
+    invalidAge: "Age must be 1–120",
     goals: {
       reduce_fat: "Reduce Fat",
       maintain: "Maintain",
