@@ -198,7 +198,7 @@ export default function TrackingScreen() {
       // 运动 tab 依赖 dailySummary 显示消耗，无论当前 food sub-tab 是哪个都要刷新
       const [, fresh] = await Promise.all([loadData(), getDailySummary(todayStr())])
       setDailySummary(fresh)
-      Alert.alert("", `${te.successMsg} ${res.calories_burned} ${te.kcal}`)
+      Alert.alert("", `${te.successMsg} ${Math.round(res.calories_burned)} ${te.kcal}`)
     } catch {
       Alert.alert(i18n.common.error)
     }
@@ -267,11 +267,11 @@ export default function TrackingScreen() {
                 <Text style={styles.cardTitle}>{t.todayNutrition}</Text>
                 <Text style={styles.statLine}>{t.totalCalories}：<Text style={styles.bold}>{Math.round(dailySummary.total_calories)}</Text> / {Math.round(dailySummary.target_calories ?? 2000)} kcal</Text>
                 <ProgressBar value={dailySummary.total_calories} target={dailySummary.target_calories || 2000} />
-                <Text style={styles.statLine}>{t.totalProtein}：<Text style={styles.bold}>{dailySummary.total_protein}g</Text> / {dailySummary.target_protein?.toFixed(0)}g</Text>
+                <Text style={styles.statLine}>{t.totalProtein}：<Text style={styles.bold}>{Math.round(dailySummary.total_protein)}g</Text> / {Math.round(dailySummary.target_protein ?? 100)}g</Text>
                 <ProgressBar value={dailySummary.total_protein} target={dailySummary.target_protein || 100} color="#3b82f6" />
-                <Text style={styles.statLine}>{t.totalFiber}：<Text style={styles.bold}>{dailySummary.total_fiber}g</Text> / 30g</Text>
+                <Text style={styles.statLine}>{t.totalFiber}：<Text style={styles.bold}>{Math.round(dailySummary.total_fiber)}g</Text> / 30g</Text>
                 <ProgressBar value={dailySummary.total_fiber} target={30} color="#f59e0b" />
-                <Text style={styles.statLine}>{t.antiInflammatory}：<Text style={styles.bold}>{dailySummary.anti_inflammatory_score}/10</Text></Text>
+                <Text style={styles.statLine}>{t.antiInflammatory}：<Text style={styles.bold}>{dailySummary.anti_inflammatory_score.toFixed(1)}/10</Text></Text>
                 <Text style={styles.statLine}>{t.exerciseBurned}：<Text style={styles.bold}>{Math.round(dailySummary.exercise_calories_burned)} kcal</Text></Text>
               </View>
               {dailySummary.logs.length === 0 ? (
@@ -321,9 +321,9 @@ export default function TrackingScreen() {
             <View>
               <View style={styles.statsCard}>
                 <Text style={styles.cardTitle}>{t.weeklyTrend} ({weeklySummary.week_start} ~ {weeklySummary.week_end})</Text>
-                <Text style={styles.statLine}>{t.avgProtein}：<Text style={styles.bold}>{weeklySummary.avg_protein}g/{i18n.common.perDay}</Text></Text>
-                <Text style={styles.statLine}>{t.avgFiber}：<Text style={styles.bold}>{weeklySummary.avg_fiber}g/{i18n.common.perDay}</Text></Text>
-                <Text style={styles.statLine}>{t.avgAnti}：<Text style={styles.bold}>{weeklySummary.avg_anti_inflammatory}/10</Text></Text>
+                <Text style={styles.statLine}>{t.avgProtein}：<Text style={styles.bold}>{Math.round(weeklySummary.avg_protein)}g/{i18n.common.perDay}</Text></Text>
+                <Text style={styles.statLine}>{t.avgFiber}：<Text style={styles.bold}>{Math.round(weeklySummary.avg_fiber)}g/{i18n.common.perDay}</Text></Text>
+                <Text style={styles.statLine}>{t.avgAnti}：<Text style={styles.bold}>{weeklySummary.avg_anti_inflammatory.toFixed(1)}/10</Text></Text>
                 <Text style={styles.statLine}>{t.totalExercise}：<Text style={styles.bold}>{Math.round(weeklySummary.total_exercise_calories)} kcal</Text></Text>
               </View>
               <View style={styles.statsCard}>
@@ -354,13 +354,13 @@ export default function TrackingScreen() {
               <View style={styles.statsCard}>
                 <Text style={styles.cardTitle}>{monthlySummary.month} {t.monthOverview}</Text>
                 <Text style={styles.statLine}>{t.daysLogged}：<Text style={styles.bold}>{monthlySummary.total_days_logged}{i18n.common.perDay}</Text></Text>
-                <Text style={styles.statLine}>{t.avgAnti}：<Text style={styles.bold}>{monthlySummary.avg_anti_inflammatory}/10</Text></Text>
+                <Text style={styles.statLine}>{t.avgAnti}：<Text style={styles.bold}>{monthlySummary.avg_anti_inflammatory.toFixed(1)}/10</Text></Text>
               </View>
               {monthlySummary.body_metrics.length > 0 && (
                 <View style={styles.statsCard}>
                   <Text style={styles.cardTitle}>{t.bodyChange}</Text>
                   {monthlySummary.body_metrics.map((m) => (
-                    <Text key={m.id} style={styles.statLine}>{m.date}：{m.weight}kg · {t.bodyFat} {m.body_fat_pct}%</Text>
+                    <Text key={m.id} style={styles.statLine}>{m.date}：{m.weight != null ? Math.round(m.weight) : "-"}kg · {t.bodyFat} {m.body_fat_pct != null ? m.body_fat_pct.toFixed(1) : "-"}%</Text>
                   ))}
                 </View>
               )}
@@ -379,7 +379,7 @@ export default function TrackingScreen() {
                     </View>
                     <View>
                       <Text style={{ fontSize: 28, fontWeight: "bold", color: "#16a34a" }}>
-                        {dailySummary?.exercise_calories_burned ?? 0}
+                        {Math.round(dailySummary?.exercise_calories_burned ?? 0)}
                       </Text>
                       <Text style={{ fontSize: 13, color: "#6b7280" }}>{t.kcalBurned}</Text>
                     </View>
